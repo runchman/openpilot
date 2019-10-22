@@ -98,10 +98,10 @@ class CarInterface(CarInterfaceBase):
     else:
       self.compute_gb = compute_gb_honda
       
-  if self.CS.CP.carFingerprint in HONDA_BOSCH and self.CS.CP.carFingerprint not in (CAR.CRV_HYBRID, CAR.CRV, CAR.CRV_5G):
-    self.bosch_honda = True
-  else:
-    self.bosch_honda = False
+    if self.CS.CP.carFingerprint in HONDA_BOSCH and self.CS.CP.carFingerprint not in (CAR.CRV_HYBRID, CAR.CRV, CAR.CRV_5G):
+      self.bosch_honda = True
+    else:
+      self.bosch_honda = False
 
   @staticmethod
   def calc_accel_override(a_ego, a_target, v_ego, v_target):
