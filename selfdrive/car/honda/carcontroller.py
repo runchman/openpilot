@@ -11,16 +11,14 @@ from selfdrive.kegman_conf import kegman_conf
 kegman = kegman_conf()
 
 
-
-
-
 def actuator_hystereses(brake, braking, brake_steady, v_ego, car_fingerprint):
   # hyst params
   brake_hyst_on = 0.02     # to activate brakes exceed this value
-  brake_hyst_off = 0.005                     # to deactivate brakes below this value
-  brake_hyst_gap = 0.01                      # don't change brake command for small oscillations within this value
+  brake_hyst_off = 0.005   # to deactivate brakes below this value
+  brake_hyst_gap = 0.01    # don't change brake command for small oscillations within this value
 
   #*** hysteresis logic to avoid brake blinking. go above 0.1 to trigger
+  print("actuator_hyst brake: ",brake," braking: ",braking, " brake_steady: ",brake_steady)
   if (brake < brake_hyst_on and not braking) or brake < brake_hyst_off:
     brake = 0.
   braking = brake > 0.
@@ -37,6 +35,7 @@ def actuator_hystereses(brake, braking, brake_steady, v_ego, car_fingerprint):
   if (car_fingerprint in (CAR.ACURA_ILX, CAR.CRV)) and brake > 0.0:
     brake += 0.15
 
+  print("actuator_hyst return brake: ",brake," braking: ",braking, " brake_steady: ",brake_steady)
   return brake, braking, brake_steady
 
 
@@ -46,13 +45,21 @@ def brake_pump_hysteresis(apply_brake, apply_brake_last, last_pump_ts, ts):
   # reset pump timer if:
   # - there is an increment in brake request
   # - we are applying steady state brakes and we haven't been running the pump
-  #   for more than 20s (to prevent pressure bleeding)
-  if apply_brake > apply_brake_last or (ts - last_pump_ts > 20. and apply_brake > 0):
-    last_pump_ts = ts
+  #   for more ahan 20s (to prevent pressure bleeding)
+  #if apply_brake > apply_brake_last or (ts - last_pump_ts > 20. and apply_brake > 0):
+  #  last_pump_ts = ts
 
   # once the pump is on, run it for at least 0.2s
-  if ts - last_pump_ts < 0.2 and apply_brake > 0:
+  #if ts - last_pump_ts < 0.2 and apply_brake > 0:
+  #  pump_on = True
+
+  # turn pump on if we are either in steady-state braking, or want a brake increase
+  if (apply_brake >= apply_brake_last):
+    last_pump_ts = ts
     pump_on = True
+  # only turn it off if we've been running it for at least .2 second
+  elif (ts - last_pump_ts > 0.2):
+    pump_on = False
 
   return pump_on, last_pump_ts
 
@@ -96,6 +103,7 @@ class CarController():
              hud_v_cruise, hud_show_lanes, hud_show_car, hud_alert):
 
     # *** apply brake hysteresis ***
+    print("actuators.brake: ",actuators.brake )
     brake, self.braking, self.brake_steady = actuator_hystereses(actuators.brake, self.braking, self.brake_steady, CS.v_ego, CS.CP.carFingerprint)
 
     # *** no output if not enabled ***
@@ -140,6 +148,7 @@ class CarController():
 
     # steer torque is converted back to CAN reference (positive when steering right)
     apply_gas = clip(actuators.gas, 0., 1.)
+    # return minimum of brake_last*MAX, or MAX-1, but not less than zero
     apply_brake = int(clip(self.brake_last * BRAKE_MAX, 0, BRAKE_MAX - 1))
     apply_steer = int(clip(-actuators.steer * STEER_MAX, -STEER_MAX, STEER_MAX))
 
@@ -180,6 +189,9 @@ class CarController():
         idx = frame // 2
         ts = frame * DT_CTRL
         pump_on, self.last_pump_ts = brake_pump_hysteresis(apply_brake, self.apply_brake_last, self.last_pump_ts, ts)
+        print("create brake command apply: ",apply_brake," pump_on: ",pump_on," pcm over: ",pcm_override," pcm cancel: ",pcm_cancel_cmd)
+        if CS.CP.enableGasInterceptor:
+          pcm_cancel_cmd = False
         can_sends.append(hondacan.create_brake_command(self.packer, apply_brake, pump_on,
           pcm_override, pcm_cancel_cmd, hud.fcw, idx, CS.CP.carFingerprint, CS.CP.isPandaBlack))
         self.apply_brake_last = apply_brake
