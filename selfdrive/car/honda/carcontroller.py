@@ -45,8 +45,8 @@ def brake_pump_hysteresis(apply_brake, apply_brake_last, last_pump_on_state, ts)
   # if calling for the same brake, leave the pump alone. It was either turned on 
   # previously while braking, or it was turned off previously when apply_brake
   # dropped below the last value. In either case, leave it as-is.
-  # Necessary because when OP is liftin its foot off the brake, we'll come in here
-  # twice with the same brake value.
+  # Necessary because when OP is lifting its foot off the brake, we'll come in here
+  # twice with the same brake value due to the timing.
   if (apply_brake == apply_brake_last):
     pump_on = last_pump_on_state
 
