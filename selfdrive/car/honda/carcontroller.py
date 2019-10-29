@@ -18,6 +18,7 @@ def actuator_hystereses(brake, braking, brake_steady, v_ego, car_fingerprint):
   brake_hyst_gap = 0.01    # don't change brake command for small oscillations within this value
 
   #*** hysteresis logic to avoid brake blinking. go above 0.1 to trigger
+  print("actuator_hyst brake: ",brake," braking: ",braking, " brake_steady: ",brake_steady)
   if (brake < brake_hyst_on and not braking) or brake < brake_hyst_off:
     brake = 0.
   braking = brake > 0.
@@ -34,6 +35,7 @@ def actuator_hystereses(brake, braking, brake_steady, v_ego, car_fingerprint):
   if (car_fingerprint in (CAR.ACURA_ILX, CAR.CRV)) and brake > 0.0:
     brake += 0.15
 
+  print("actuator_hyst return brake: ",brake," braking: ",braking, " brake_steady: ",brake_steady)
   return brake, braking, brake_steady
 
 
@@ -106,6 +108,7 @@ class CarController():
              hud_v_cruise, hud_show_lanes, hud_show_car, hud_alert):
 
     # *** apply brake hysteresis ***
+    print("actuators.brake: ",actuators.brake )
     brake, self.braking, self.brake_steady = actuator_hystereses(actuators.brake, self.braking, self.brake_steady, CS.v_ego, CS.CP.carFingerprint)
 
     # *** no output if not enabled ***
@@ -165,8 +168,8 @@ class CarController():
       lkas_active, CS.CP.carFingerprint, idx, CS.CP.isPandaBlack))
 
     # Send dashboard UI commands.
-    if (frame % 10) == 0:
-      idx = (frame//10) % 4
+    if (frame % 40) == 0:
+      idx = (frame//40) % 4
       can_sends.extend(hondacan.create_ui_commands(self.packer, pcm_speed, hud, CS.CP.carFingerprint, CS.is_metric, idx, CS.CP.isPandaBlack))
 
     if CS.CP.radarOffCan:
