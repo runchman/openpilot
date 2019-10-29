@@ -192,7 +192,7 @@ class CarController():
         ts = frame * DT_CTRL
         pump_on, self.last_pump_ts = brake_pump_hysteresis(apply_brake, self.apply_brake_last, self.last_pump_ts, ts)
         # Do NOT send the cancel command if we are using the pedal. Sending cancel causes the car firmware to
-        # turn the brake pump off, and we don't want that. Stock ACC does not send the cancel cmd.
+        # turn the brake pump off, and we don't want that. Stock ACC does not send the cancel cmd when it is braking.
         if CS.CP.enableGasInterceptor:
           pcm_cancel_cmd = False
         can_sends.append(hondacan.create_brake_command(self.packer, apply_brake, pump_on,
