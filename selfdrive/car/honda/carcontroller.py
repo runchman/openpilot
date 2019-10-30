@@ -86,7 +86,7 @@ class CarController():
     self.brake_steady = 0.
     self.brake_last = 0.
     self.apply_brake_last = 0
-    self.last_pump_on_state = False.
+    self.last_pump_on_state = False
     self.packer = CANPacker(dbc_name)
     self.new_radar_config = False
     self.prev_lead_distance = 0.0
@@ -156,8 +156,8 @@ class CarController():
       lkas_active, CS.CP.carFingerprint, idx, CS.CP.isPandaBlack))
 
     # Send dashboard UI commands.
-    if (frame % 10) == 0:
-      idx = (frame//10) % 4
+    if (frame % 40) == 0:
+      idx = (frame//40) % 4
       can_sends.extend(hondacan.create_ui_commands(self.packer, pcm_speed, hud, CS.CP.carFingerprint, CS.is_metric, idx, CS.CP.isPandaBlack))
 
     if CS.CP.radarOffCan:
