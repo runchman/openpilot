@@ -86,7 +86,7 @@ class CarController():
     self.brake_steady = 0.
     self.brake_last = 0.
     self.apply_brake_last = 0
-    self.last_pump_on_state = False.
+    self.last_pump_on_state = False
     self.packer = CANPacker(dbc_name)
     self.new_radar_config = False
     self.prev_lead_distance = 0.0
