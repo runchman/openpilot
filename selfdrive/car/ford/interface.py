@@ -157,9 +157,11 @@ class CarInterface(CarInterfaceBase):
       events.append(create_event('pedalPressed', [ET.NO_ENTRY, ET.USER_DISABLE]))
 
     if ret.gasPressed:
+      print("pedalPressed create PRE_ENABLE")
       events.append(create_event('pedalPressed', [ET.PRE_ENABLE]))
 
     if self.CS.lkas_state not in [2, 3] and ret.vEgo > 13.* CV.MPH_TO_MS and ret.cruiseState.enabled:
+      print("case 1 create ET.WARNING")
       events.append(create_event('steerTempUnavailableMute', [ET.WARNING]))
 
     ret.events = events

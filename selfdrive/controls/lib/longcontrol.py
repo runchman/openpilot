@@ -110,6 +110,7 @@ class LongControl():
 
     # Intention is to stop, switch to a different brake control until we stop
     elif self.long_control_state == LongCtrlState.stopping:
+      print("J.R. long_control_state = stopping")
       # Keep applying brakes until the car is stopped
       if not standstill or output_gb > -BRAKE_STOPPING_TARGET:
         output_gb -= STOPPING_BRAKE_RATE / RATE
@@ -120,6 +121,7 @@ class LongControl():
 
     # Intention is to move again, release brake fast before handing control to PID
     elif self.long_control_state == LongCtrlState.starting:
+      print("J.R. long_control_state = starting")
       if output_gb < -0.2:
         output_gb += STARTING_BRAKE_RATE / RATE
       self.v_pid = v_ego
