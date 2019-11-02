@@ -564,6 +564,7 @@ class CarInterface(CarInterfaceBase):
       if ret.vEgo < self.CP.minEnableSpeed + 2.:
       #  events.append(create_event('speedTooLow', [ET.IMMEDIATE_DISABLE]))
       #else:
+        print("J.R. appending cruiseDisabled")
         events.append(create_event("cruiseDisabled", [ET.IMMEDIATE_DISABLE]))   # send loud alert if slow and cruise disables during braking
       
     if self.CS.CP.minEnableSpeed > 0 and ret.vEgo < 0.001:
@@ -591,10 +592,13 @@ class CarInterface(CarInterfaceBase):
       if ((cur_time - self.last_enable_pressed) < 0.2 and
           (cur_time - self.last_enable_sent) > 0.2 and
           ret.cruiseState.enabled) or \
-         (enable_pressed and get_events(events, [ET.NO_ENTRY])):
+         (False):
+         # (enable_pressed and get_events(events, [ET.NO_ENTRY])):
+        print("send button enable event case 1")
         events.append(create_event('buttonEnable', [ET.ENABLE]))
         self.last_enable_sent = cur_time
     elif enable_pressed:
+        print("send button enable event case 2")
       events.append(create_event('buttonEnable', [ET.ENABLE]))
 
     ret.events = events
