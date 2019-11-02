@@ -598,7 +598,7 @@ class CarInterface(CarInterfaceBase):
         events.append(create_event('buttonEnable', [ET.ENABLE]))
         self.last_enable_sent = cur_time
     elif enable_pressed:
-        print("send button enable event case 2")
+      print("send button enable event case 2")
       events.append(create_event('buttonEnable', [ET.ENABLE]))
 
     ret.events = events
