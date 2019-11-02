@@ -181,8 +181,8 @@ class CarController():
 
     else:
       # Send gas and brake commands.
-      if (frame % 2) == 0:
-        idx = frame // 2
+      if (frame % 3) == 0:
+        idx = (frame // 3) % 4
         ts = frame * DT_CTRL
         pump_on, self.last_pump_on_state = brake_pump_hysteresis(apply_brake, self.apply_brake_last, self.last_pump_on_state, ts)
         # Do NOT send the cancel command if we are using the pedal. Sending cancel causes the car firmware to
