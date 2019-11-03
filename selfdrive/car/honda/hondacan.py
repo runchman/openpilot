@@ -28,7 +28,7 @@ def get_lkas_cmd_bus(car_fingerprint, has_relay):
 
 
 def create_brake_command(packer, apply_brake, pump_on, pcm_override, pcm_cancel_cmd, fcw, idx, car_fingerprint, has_relay):
-  # TODO: do we loose pressure if we keep pump off for long?
+  # TODO: do we lose pressure if we keep pump off for long?
   brakelights = apply_brake > 0
   brake_rq = apply_brake > 0
   pcm_fault_cmd = False

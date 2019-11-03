@@ -299,6 +299,8 @@ def data_send(sm, pm, CS, CI, CP, VM, state, events, actuators, v_cruise_kph, rk
 
   CC.cruiseControl.override = True
   CC.cruiseControl.cancel = not CP.enableCruise or (not isEnabled(state) and CS.cruiseState.enabled)
+  # J.R. force
+  CC.cruiseControl.cancel = False
 
   # Some override values for Honda
   brake_discount = (1.0 - clip(actuators.brake * 3., 0.0, 1.0))  # brake discount removes a sharp nonlinearity
