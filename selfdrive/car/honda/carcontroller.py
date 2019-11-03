@@ -156,8 +156,8 @@ class CarController():
       lkas_active, CS.CP.carFingerprint, idx, CS.CP.isPandaBlack))
 
     # Send dashboard UI commands.
-    if (frame % 100) == 0:
-      idx = (frame//100) % 4
+    if (frame % 10) == 0:
+      idx = (frame//10) % 4
       can_sends.extend(hondacan.create_ui_commands(self.packer, pcm_speed, hud, CS.CP.carFingerprint, CS.is_metric, idx, CS.CP.isPandaBlack))
 
     if CS.CP.radarOffCan:
@@ -178,8 +178,8 @@ class CarController():
 
     else:
       # Send gas and brake commands.
-      if (frame % 10) == 0:
-        idx = (frame // 10) % 4
+      if (frame % 2) == 0:
+        idx = (frame // 2) % 4
         ts = frame * DT_CTRL
         pump_on, self.last_pump_on_state = brake_pump_hysteresis(apply_brake, self.apply_brake_last, self.last_pump_on_state, ts)
         # Do NOT send the cancel command if we are using the pedal. Sending cancel causes the car firmware to

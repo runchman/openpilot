@@ -564,7 +564,6 @@ class CarInterface(CarInterfaceBase):
       if ret.vEgo < self.CP.minEnableSpeed + 2.:
       #  events.append(create_event('speedTooLow', [ET.IMMEDIATE_DISABLE]))
       #else:
-        print("J.R. appending cruiseDisabled")
         events.append(create_event("cruiseDisabled", [ET.IMMEDIATE_DISABLE]))   # send loud alert if slow and cruise disables during braking
       
     if self.CS.CP.minEnableSpeed > 0 and ret.vEgo < 0.001:
@@ -592,13 +591,10 @@ class CarInterface(CarInterfaceBase):
       if ((cur_time - self.last_enable_pressed) < 0.2 and
           (cur_time - self.last_enable_sent) > 0.2 and
           ret.cruiseState.enabled) or \
-         (False):
-         # (enable_pressed and get_events(events, [ET.NO_ENTRY])):
-        print("send button enable event case 1")
+          (enable_pressed and get_events(events, [ET.NO_ENTRY])):
         events.append(create_event('buttonEnable', [ET.ENABLE]))
         self.last_enable_sent = cur_time
     elif enable_pressed:
-      print("send button enable event case 2")
       events.append(create_event('buttonEnable', [ET.ENABLE]))
 
     ret.events = events
@@ -622,6 +618,10 @@ class CarInterface(CarInterfaceBase):
 
     pcm_accel = int(clip(c.cruiseControl.accelOverride, 0, 1) * 0xc6)
 
+    # J.R. if cruiseControl.cancel is set here, that would turn off our brake pump
+    c.cruiseControl.cancel = False
+    #if (self.CS.CP.enableGasInterceptor):
+    #  c.cruiseControl.cancel = False
     can_sends = self.CC.update(c.enabled, self.CS, self.frame,
                                c.actuators,
                                c.cruiseControl.speedOverride,
