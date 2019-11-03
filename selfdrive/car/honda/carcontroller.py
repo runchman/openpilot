@@ -156,17 +156,15 @@ class CarController():
       lkas_active, CS.CP.carFingerprint, idx, CS.CP.isPandaBlack))
 
     # Send dashboard UI commands.
-    if (frame % 10) == 0:
-      idx = (frame//10) % 4
+    if (frame % 100) == 0:
+      idx = (frame//100) % 4
       can_sends.extend(hondacan.create_ui_commands(self.packer, pcm_speed, hud, CS.CP.carFingerprint, CS.is_metric, idx, CS.CP.isPandaBlack))
 
     if CS.CP.radarOffCan:
       # If using stock ACC, spam cancel command to kill gas when OP disengages.
       if pcm_cancel_cmd:
-        print("radarOffCan, pcm_cancel_cmd")
         can_sends.append(hondacan.spam_buttons_command(self.packer, CruiseButtons.CANCEL, idx, CS.CP.carFingerprint, CS.CP.isPandaBlack))
       elif CS.stopped:
-        print("radarOffCan, car is stopped")
         if CS.CP.carFingerprint in (CAR.ACCORD, CAR.ACCORD_15, CAR.ACCORDH, CAR.INSIGHT):
           if CS.lead_distance > (self.prev_lead_distance + float(kegman.conf['leadDistance'])):
             can_sends.append(hondacan.spam_buttons_command(self.packer, CruiseButtons.RES_ACCEL, idx, CS.CP.carFingerprint, CS.CP.isPandaBlack))
@@ -176,20 +174,18 @@ class CarController():
         else:
           can_sends.append(hondacan.spam_buttons_command(self.packer, CruiseButtons.RES_ACCEL, idx, CS.CP.carFingerprint, CS.CP.isPandaBlack))
       else:
-        # print("radarOffCan, final else")
         self.prev_lead_distance = CS.lead_distance
 
     else:
       # Send gas and brake commands.
-      if (frame % 2) == 0:
-        idx = (frame // 2) % 4
+      if (frame % 10) == 0:
+        idx = (frame // 10) % 4
         ts = frame * DT_CTRL
         pump_on, self.last_pump_on_state = brake_pump_hysteresis(apply_brake, self.apply_brake_last, self.last_pump_on_state, ts)
         # Do NOT send the cancel command if we are using the pedal. Sending cancel causes the car firmware to
         # turn the brake pump off, and we don't want that. Stock ACC does not send the cancel cmd when it is braking.
         if CS.CP.enableGasInterceptor:
           pcm_cancel_cmd = False
-        # print("J.R. create brake command apply_brake:",apply_brake," pump: ",pump_on," over: ",pcm_override," cancel:",pcm_cancel)
         can_sends.append(hondacan.create_brake_command(self.packer, apply_brake, pump_on,
           pcm_override, pcm_cancel_cmd, hud.fcw, idx, CS.CP.carFingerprint, CS.CP.isPandaBlack))
         self.apply_brake_last = apply_brake
