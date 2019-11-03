@@ -619,7 +619,7 @@ class CarInterface(CarInterfaceBase):
     pcm_accel = int(clip(c.cruiseControl.accelOverride, 0, 1) * 0xc6)
 
     # J.R. if cruiseControl.cancel is set here, that would turn off our brake pump
-    c.cruiseControl.cancel = False
+    # c.cruiseControl.cancel = False
     #if (self.CS.CP.enableGasInterceptor):
     #  c.cruiseControl.cancel = False
     can_sends = self.CC.update(c.enabled, self.CS, self.frame,
