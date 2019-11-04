@@ -113,6 +113,7 @@ class LongControl():
       # Keep applying brakes until the car is stopped
       if not standstill or output_gb > -BRAKE_STOPPING_TARGET:
         output_gb -= STOPPING_BRAKE_RATE / RATE
+      # clip forces output_bg to be between -brake_max and gas_max, clipping it into those range boundaries
       output_gb = clip(output_gb, -brake_max, gas_max)
 
       self.v_pid = v_ego

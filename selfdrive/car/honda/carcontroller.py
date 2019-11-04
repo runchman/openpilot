@@ -96,6 +96,9 @@ class CarController():
              pcm_speed, pcm_override, pcm_cancel_cmd, pcm_accel, \
              hud_v_cruise, hud_show_lanes, hud_show_car, hud_alert):
 
+    # J.R. I'm thinking don't give the brake command unless USER_BRAKE from VSA_STATUS has dropped to zero, so we aren't
+    # competing.
+
     # *** apply brake hysteresis ***
     brake, self.braking, self.brake_steady = actuator_hystereses(actuators.brake, self.braking, self.brake_steady, CS.v_ego, CS.CP.carFingerprint)
 
