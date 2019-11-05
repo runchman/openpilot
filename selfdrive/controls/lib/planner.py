@@ -132,6 +132,12 @@ class Planner():
     lead_1 = sm['radarState'].leadOne
     lead_2 = sm['radarState'].leadTwo
 
+    # We are in either of the following states:
+    # 1. stopped
+    # 2. cruising
+    # 3. braking 
+    # 4. accelerating
+
     enabled = (long_control_state == LongCtrlState.pid) or (long_control_state == LongCtrlState.stopping)
 
     if self.mpc_frame % 1000 == 0:
