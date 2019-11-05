@@ -17,7 +17,7 @@ STARTING_BRAKE_RATE = 0.8  # brake_travel/s while releasing on restart
 BRAKE_STOPPING_TARGET = float(kegman.conf['brakeStoppingTarget'])  # apply at least this amount of brake to maintain the vehicle stationary
 
 _MAX_SPEED_ERROR_BP = [0., 30.]  # speed breakpoints
-_MAX_SPEED_ERROR_V = [1.5, .8]  # max positive v_pid error VS actual speed; this avoids controls windup due to slow pedal resp
+_MAX_SPEED_ERROR_V = [1.5, 1.5]  # max positive v_pid error VS actual speed; this avoids controls windup due to slow pedal resp
 
 RATE = 100.0
 
@@ -62,6 +62,7 @@ class LongControl():
     self.long_control_state = LongCtrlState.off  # initialized to off
     self.pid = PIController((CP.longitudinalTuning.kpBP, CP.longitudinalTuning.kpV),
                             (CP.longitudinalTuning.kiBP, CP.longitudinalTuning.kiV),
+                            k_f=0,
                             rate=RATE,
                             sat_limit=0.8,
                             convert=compute_gb)
@@ -100,7 +101,9 @@ class LongControl():
 
       # Toyota starts braking more when it thinks you want to stop
       # Freeze the integrator so we don't accelerate to compensate, and don't allow positive acceleration
-      prevent_overshoot = not CP.stoppingControl and v_ego < 1.5 and v_target_future < 0.7
+      #prevent_overshoot = not CP.stoppingControl and v_ego < 1.5 and v_target_future < 0.7
+      prevent_overshoot = False
+      #deadzone = interp(v_ego_pid, CP.longitudinalTuning.deadzoneBP, CP.longitudinalTuning.deadzoneV)
       deadzone = interp(v_ego_pid, CP.longitudinalTuning.deadzoneBP, CP.longitudinalTuning.deadzoneV)
 
       output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, deadzone=deadzone, feedforward=a_target, freeze_integrator=prevent_overshoot)
