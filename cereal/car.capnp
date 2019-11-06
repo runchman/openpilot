@@ -354,6 +354,8 @@ struct CarParams {
     lqr @40 :LateralLQRTuning;
   }
 
+  longitudinalBrakeTuning @64 :LongitudinalPIDTuning;
+
   steerLimitAlert @28 :Bool;
 
   vEgoStopping @29 :Float32; # Speed at which the car goes into stopping state
