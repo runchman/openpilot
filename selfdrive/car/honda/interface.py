@@ -261,14 +261,21 @@ class CarInterface(CarInterfaceBase):
       ret.steerRatio = 10.25
       tire_stiffness_factor = 0.75 # not optimized yet
       ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.20], [0.04]]
+
       # BP values are speeds - 0 m/s, 10 m/s, 35 m/s
       # which is 0 MPH, 22 MPH, and 78 MPH
       ret.longitudinalTuning.kpBP = [0., 10., 35.]
       # These are corresponding Kp values with the above speeds
       ret.longitudinalTuning.kpV = [0.4, 0.4, 0.4]
+
       ret.longitudinalTuning.kiBP = [0., 35.]
-      # set to zero for initial tuning
       ret.longitudinalTuning.kiV = [0.00, 0.00]
+
+      ret.longitudinalBrakeTuning.kpV = [0.4, 0.4, 0.4]
+      ret.longitudinalBrakeTuning.kiBP = [0., 35.]
+      ret.longitudinalBrakeTuning.kiBP = [0., 35.]
+      ret.longitudinalBrakeTuning.kiV = [0.00, 0.00]
+      # set to zero for initial tuning
       # J.R. no Kf ???? defaults to 1.0 what the heck
 
     elif candidate == CAR.ACURA_RDX:
@@ -380,9 +387,11 @@ class CarInterface(CarInterfaceBase):
     ret.steerMaxV = [1.]   # max steer allowed
 
     # prevent lurching when resuming
+    # for testing, set this to fixed value
     if ret.enableGasInterceptor:
       ret.gasMaxBP = [0., 3, 8, 35]
-      ret.gasMaxV = [0.2, 0.3, 0.5, 0.6]
+      ret.gasMaxV = [0.6, 0.6, 0.6, 0.6]
+      #ret.gasMaxV = [0.2, 0.3, 0.5, 0.6]
     else:
       ret.gasMaxBP = [0.]  # m/s
       ret.gasMaxV = [0.] # max gas allowed

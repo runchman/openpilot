@@ -493,7 +493,7 @@ def controlsd_thread(sm=None, pm=None, can_sock=None):
 
   state = State.disabled
   soft_disable_timer = 0
-  v_cruise_kph = 255
+  v_cruise_kph = 0
   v_cruise_kph_last = 0
   overtemp = False
   free_space = False

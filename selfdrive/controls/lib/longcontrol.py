@@ -60,8 +60,16 @@ def long_control_state_trans(active, long_control_state, v_ego, v_target, v_pid,
 class LongControl():
   def __init__(self, CP, compute_gb):
     self.long_control_state = LongCtrlState.off  # initialized to off
+    # J.R. first thing here, I'd config an additional PID and use one when accelerating, and a
+    # different one when decelerating.
     self.pid = PIController((CP.longitudinalTuning.kpBP, CP.longitudinalTuning.kpV),
                             (CP.longitudinalTuning.kiBP, CP.longitudinalTuning.kiV),
+                            k_f=0,
+                            rate=RATE,
+                            sat_limit=0.8,
+                            convert=compute_gb)
+    self.decelPid = PIController((CP.longitudinalBrakeTuning.kpBP, CP.longitudinalBrakeTuning.kpV),
+                            (CP.longitudinalBrakeTuning.kiBP, CP.longitudinalBrakeTuning.kiV),
                             k_f=0,
                             rate=RATE,
                             sat_limit=0.8,
@@ -76,6 +84,9 @@ class LongControl():
 
   def update(self, active, v_ego, brake_pressed, standstill, cruise_standstill, v_cruise, v_target, v_target_future, a_target, CP):
     """Update longitudinal control. This updates the state machine and runs a PID loop"""
+
+    
+
     # Actuation limits
     gas_max = interp(v_ego, CP.gasMaxBP, CP.gasMaxV)
     brake_max = interp(v_ego, CP.brakeMaxBP, CP.brakeMaxV)
@@ -104,8 +115,9 @@ class LongControl():
       #prevent_overshoot = not CP.stoppingControl and v_ego < 1.5 and v_target_future < 0.7
       prevent_overshoot = False
       #deadzone = interp(v_ego_pid, CP.longitudinalTuning.deadzoneBP, CP.longitudinalTuning.deadzoneV)
-      deadzone = interp(v_ego_pid, CP.longitudinalTuning.deadzoneBP, CP.longitudinalTuning.deadzoneV)
+      deadzone = 0
 
+      # setpoint, measured, current speed, ....
       output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, deadzone=deadzone, feedforward=a_target, freeze_integrator=prevent_overshoot)
 
       if prevent_overshoot:
@@ -115,6 +127,8 @@ class LongControl():
     elif self.long_control_state == LongCtrlState.stopping:
       # Keep applying brakes until the car is stopped
       if not standstill or output_gb > -BRAKE_STOPPING_TARGET:
+        # increase braking output because we haven't hit the stop target brake level yet, or
+        # we haven't stopped
         output_gb -= STOPPING_BRAKE_RATE / RATE
       # clip forces output_bg to be between -brake_max and gas_max, clipping it into those range boundaries
       output_gb = clip(output_gb, -brake_max, gas_max)
