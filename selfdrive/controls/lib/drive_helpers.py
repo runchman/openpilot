@@ -6,7 +6,7 @@ from selfdrive.config import Conversions as CV
 V_CRUISE_MAX = 144
 V_CRUISE_MIN = 8
 V_CRUISE_DELTA = 8
-V_CRUISE_ENABLE_MIN = 72.42  # = 45 mph
+V_CRUISE_SET_WHEN_STOPPED = 72.42  # = 45 mph
 V_CRUISE_SPEEDING_OFFSET = 4.82  # = 3 mph
 
 
@@ -79,5 +79,7 @@ def initialize_v_cruise(v_ego, buttonEvents, v_cruise_last):
     # 250kph or above probably means we never had a set speed
     if b.type == "accelCruise" and v_cruise_last < 250:
       return v_cruise_last
+  if (v_ego < .001):
+    return int(round(V_CRUISE_SET_WHEN_STOPPED * CV.MS_TO_KPH))
 
-  return int(round(clip(v_ego * CV.MS_TO_KPH, V_CRUISE_ENABLE_MIN, V_CRUISE_MAX)))
+  return int(round(clip(v_ego * CV.MS_TO_KPH, 0, V_CRUISE_MAX)))
