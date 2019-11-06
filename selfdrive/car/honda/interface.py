@@ -267,7 +267,7 @@ class CarInterface(CarInterfaceBase):
       # These are corresponding Kp values with the above speeds
       ret.longitudinalTuning.kpV = [0.6, 0.4, 0.3]
       ret.longitudinalTuning.kiBP = [0., 35.]
-      ret.longitudinalTuning.kiV = [0.08, 0.02]
+      ret.longitudinalTuning.kiV = [0.18, 0.12]
       # J.R. no Kf ???? defaults to 1.0 what the heck
 
     elif candidate == CAR.ACURA_RDX:
@@ -388,7 +388,7 @@ class CarInterface(CarInterfaceBase):
     
     #ret.gasMaxBP = [0.]  # m/s
     #ret.gasMaxV = [0.6] if ret.enableGasInterceptor else [0.] # max gas allowed
-    ret.brakeMaxBP = [0., 40.]  # m/s
+    ret.brakeMaxBP = [0., 20.]  # m/s
     ret.brakeMaxV = [1.0, 0.8]   # max brake allowed
 
     ret.longitudinalTuning.deadzoneBP = [0.]
