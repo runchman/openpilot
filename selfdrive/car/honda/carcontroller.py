@@ -193,9 +193,8 @@ class CarController():
           pcm_override, pcm_cancel_cmd, hud.fcw, idx, CS.CP.carFingerprint, CS.CP.isPandaBlack))
         self.apply_brake_last = apply_brake
 
-        if CS.CP.enableGasInterceptor:
-          # send exactly zero if apply_gas is zero. Interceptor will send the max between read value and apply_gas.
-          # This prevents unexpected pedal range rescaling
+        # don't give a gas command if we just gave a brake command
+        if CS.CP.enableGasInterceptor and (apply_brake <= 0):
           can_sends.append(create_gas_command(self.packer, apply_gas, idx))
 
     return can_sends
