@@ -119,6 +119,8 @@ class LongControl():
 
       # setpoint, measured, current speed, ....
       output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, deadzone=deadzone, feedforward=a_target, freeze_integrator=prevent_overshoot)
+      # don't do any braking, just for testing
+      output_gb = clip(output_gb,0,gas_max)
 
       if prevent_overshoot:
         output_gb = min(output_gb, 0.0)

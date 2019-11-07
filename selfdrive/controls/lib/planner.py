@@ -156,22 +156,24 @@ class Planner():
 
       if force_slow_decel:
         # if required so, force a smooth deceleration
-        accel_limits_turns[1] = min(accel_limits_turns[1], AWARENESS_DECEL)
-        accel_limits_turns[0] = min(accel_limits_turns[0], accel_limits_turns[1])
+        #accel_limits_turns[1] = min(accel_limits_turns[1], AWARENESS_DECEL)
+        #accel_limits_turns[0] = min(accel_limits_turns[0], accel_limits_turns[1])
 
-      self.v_cruise, self.a_cruise = speed_smoother(self.v_acc_start, self.a_acc_start,
-                                                    v_cruise_setpoint,
-                                                    accel_limits_turns[1], accel_limits_turns[0],
-                                                    jerk_limits[1], jerk_limits[0],
-                                                    LON_MPC_STEP)
+      self.v_cruise, self.a_cruise = self.v_acc_start, self.a_acc_start
+      self.v_model, self.a_model = self.v_acc_start, self.a_acc_start
+      #self.v_cruise, self.a_cruise = speed_smoother(self.v_acc_start, self.a_acc_start,
+      #                                              v_cruise_setpoint,
+      #                                              accel_limits_turns[1], accel_limits_turns[0],
+      #                                              jerk_limits[1], jerk_limits[0],
+      #                                              LON_MPC_STEP)
 
-      self.v_model, self.a_model = speed_smoother(self.v_acc_start, self.a_acc_start,
-                                                    model_speed,
-                                                    2*accel_limits[1], accel_limits[0],
-                                                    2*jerk_limits[1], jerk_limits[0],
-                                                    LON_MPC_STEP)
+      #self.v_model, self.a_model = speed_smoother(self.v_acc_start, self.a_acc_start,
+      #                                              model_speed,
+      #                                              2*accel_limits[1], accel_limits[0],
+      #                                              2*jerk_limits[1], jerk_limits[0],
+      #                                              LON_MPC_STEP)
 
-      # cruise speed can't be negative even is user is distracted
+      # cruise speed can't be negative even if user is distracted
       self.v_cruise = max(self.v_cruise, 0.)
     else:
       starting = long_control_state == LongCtrlState.starting

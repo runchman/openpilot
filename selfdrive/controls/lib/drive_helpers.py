@@ -66,12 +66,12 @@ def update_v_cruise(v_cruise_kph, buttonEvents, enabled):
   for b in buttonEvents:
     if enabled and not b.pressed:
       if b.type == "accelCruise":
-        v_cruise_kph += V_CRUISE_DELTA - (v_cruise_kph % V_CRUISE_DELTA) + V_CRUISE_SPEEDING_OFFSET
+        v_cruise_kph += V_CRUISE_DELTA - (v_cruise_kph % V_CRUISE_DELTA) 
       elif b.type == "decelCruise":
-        v_cruise_kph -= V_CRUISE_DELTA - ((V_CRUISE_DELTA - v_cruise_kph) % V_CRUISE_DELTA) + V_CRUISE_SPEEDING_OFFSET
+        v_cruise_kph -= V_CRUISE_DELTA - ((V_CRUISE_DELTA - v_cruise_kph) % V_CRUISE_DELTA)
       v_cruise_kph = clip(v_cruise_kph, V_CRUISE_MIN, V_CRUISE_MAX)
 
-  return v_cruise_kph
+  return v_cruise_kph + V_CRUISE_SPEEDING_OFFSET
 
 
 def initialize_v_cruise(v_ego, buttonEvents, v_cruise_last):
@@ -79,7 +79,7 @@ def initialize_v_cruise(v_ego, buttonEvents, v_cruise_last):
     # 250kph or above probably means we never had a set speed
     if b.type == "accelCruise" and v_cruise_last < 250:
       return v_cruise_last
-  if (v_ego < .001):
+  if (v_ego < .1):
     return int(round(V_CRUISE_SET_WHEN_STOPPED * CV.MS_TO_KPH))
 
   return int(round(clip(v_ego * CV.MS_TO_KPH, 0, V_CRUISE_MAX)))

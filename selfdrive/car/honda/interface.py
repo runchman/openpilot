@@ -406,7 +406,7 @@ class CarInterface(CarInterfaceBase):
 
     ret.stoppingControl = True
     ret.steerLimitAlert = True
-    ret.startAccel = 0.5
+    ret.startAccel = 1.0
 
     ret.steerActuatorDelay = 0.1
 
