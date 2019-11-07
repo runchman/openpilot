@@ -354,7 +354,7 @@ struct CarParams {
     lqr @40 :LateralLQRTuning;
   }
 
-  longitudinalBrakeTuning @64 :LongitudinalPIDTuning;
+  longitudinalBrakeTuning @44 :LongitudinalPIDTuning;
 
   steerLimitAlert @28 :Bool;
 
