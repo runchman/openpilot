@@ -3,11 +3,11 @@ from common.numpy_fast import clip, interp
 from selfdrive.config import Conversions as CV
 
 # kph
-V_CRUISE_MAX = 144
-V_CRUISE_MIN = 8
-V_CRUISE_DELTA = 8
-V_CRUISE_SET_WHEN_STOPPED = 72.42  # = 45 mph
-V_CRUISE_SPEEDING_OFFSET = 4.82  # = 3 mph
+V_CRUISE_MAX = 144                 #  90 mph
+V_CRUISE_MIN = 8                   #   5 mph
+V_CRUISE_DELTA = 8                 #   5 mph
+V_CRUISE_SET_WHEN_STOPPED = 72.42  #  45 mph
+V_CRUISE_SPEEDING_OFFSET = 4.82    #   3 mph
 
 
 class MPC_COST_LAT:
@@ -69,8 +69,8 @@ def update_v_cruise(v_cruise_kph, buttonEvents, enabled):
         v_cruise_kph += V_CRUISE_DELTA - (v_cruise_kph % V_CRUISE_DELTA) 
         v_cruise_kph += V_CRUISE_SPEEDING_OFFSET
       elif b.type == "decelCruise":
-        v_cruise_kph -= V_CRUISE_DELTA - ((V_CRUISE_DELTA - v_cruise_kph) % V_CRUISE_DELTA)
-        v_cruise_kph += V_CRUISE_SPEEDING_OFFSET
+        v_cruise_kph -= V_CRUISE_DELTA # - ((V_CRUISE_DELTA - v_cruise_kph) % V_CRUISE_DELTA)
+        # v_cruise_kph += V_CRUISE_SPEEDING_OFFSET
 
       v_cruise_kph = clip(v_cruise_kph, V_CRUISE_MIN, V_CRUISE_MAX)
 

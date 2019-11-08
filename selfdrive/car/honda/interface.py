@@ -568,6 +568,7 @@ class CarInterface(CarInterfaceBase):
        (ret.brakePressed and (not self.brake_pressed_prev or ret.vEgo > 0.001)):
       events.append(create_event('pedalPressed', [ET.NO_ENTRY, ET.USER_DISABLE]))
 
+    # J.R. why does a pedal press generate a pre-enable event? That doesn't make sense
     if ret.gasPressed:
       events.append(create_event('pedalPressed', [ET.PRE_ENABLE]))
 

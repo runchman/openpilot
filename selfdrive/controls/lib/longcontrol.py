@@ -32,27 +32,28 @@ def long_control_state_trans(active, long_control_state, v_ego, v_target, v_pid,
 
   starting_condition = v_target > STARTING_TARGET_SPEED and not cruise_standstill
 
+  # for now we are just working on the steady-state cruising state
   if not active:
     long_control_state = LongCtrlState.off
-
   else:
-    if long_control_state == LongCtrlState.off:
-      if active:
-        long_control_state = LongCtrlState.pid
+    long_control_state = LongCtrlState.pid
+    #if long_control_state == LongCtrlState.off:
+    #  if active:
+    #    long_control_state = LongCtrlState.pid
 
-    elif long_control_state == LongCtrlState.pid:
-      if stopping_condition:
-        long_control_state = LongCtrlState.stopping
+    #elif long_control_state == LongCtrlState.pid:
+    #  if stopping_condition:
+    #    long_control_state = LongCtrlState.stopping
 
-    elif long_control_state == LongCtrlState.stopping:
-      if starting_condition:
-        long_control_state = LongCtrlState.starting
+    #elif long_control_state == LongCtrlState.stopping:
+    #  if starting_condition:
+    #    long_control_state = LongCtrlState.starting
 
-    elif long_control_state == LongCtrlState.starting:
-      if stopping_condition:
-        long_control_state = LongCtrlState.stopping
-      elif output_gb >= -BRAKE_THRESHOLD_TO_PID:
-        long_control_state = LongCtrlState.pid
+    #elif long_control_state == LongCtrlState.starting:
+    #  if stopping_condition:
+    #    long_control_state = LongCtrlState.stopping
+    #  elif output_gb >= -BRAKE_THRESHOLD_TO_PID:
+    #    long_control_state = LongCtrlState.pid
 
   return long_control_state
 
@@ -60,6 +61,7 @@ def long_control_state_trans(active, long_control_state, v_ego, v_target, v_pid,
 class LongControl():
   def __init__(self, CP, compute_gb):
     self.long_control_state = LongCtrlState.off  # initialized to off
+
     # J.R. first thing here, I'd config an additional PID and use one when accelerating, and a
     # different one when decelerating.
     self.pid = PIController((CP.longitudinalTuning.kpBP, CP.longitudinalTuning.kpV),
@@ -68,6 +70,7 @@ class LongControl():
                             rate=RATE,
                             sat_limit=0.8,
                             convert=compute_gb)
+
     self.decelPid = PIController((CP.longitudinalBrakeTuning.kpBP, CP.longitudinalBrakeTuning.kpV),
                             (CP.longitudinalBrakeTuning.kiBP, CP.longitudinalBrakeTuning.kiV),
                             k_f=0,
@@ -104,9 +107,12 @@ class LongControl():
 
     # tracking objects and driving
     elif self.long_control_state == LongCtrlState.pid:
-      self.v_pid = v_target
+      # J.R. changed to v_cruise because we want the pid loop to do all the work
+      self.v_pid = v_cruise
       self.pid.pos_limit = gas_max
+      # set neg limit to zero to avoid braking while we are debugging
       self.pid.neg_limit = - brake_max
+      self.pid.neg_limit = 0
 
       # Toyota starts braking more when it thinks you want to stop
       # Freeze the integrator so we don't accelerate to compensate, and don't allow positive acceleration
@@ -144,6 +150,7 @@ class LongControl():
       self.pid.reset()
 
     self.last_output_gb = output_gb
+
     final_gas = clip(output_gb, 0., gas_max)
     final_brake = -clip(output_gb, -brake_max, 0.)
 

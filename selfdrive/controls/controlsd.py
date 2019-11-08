@@ -260,6 +260,7 @@ def state_control(frame, rcv_frame, plan, path_plan, CS, CP, state, events, v_cr
   plan_age = DT_CTRL * (frame - rcv_frame['plan'])
   dt = min(plan_age, LON_MPC_STEP + DT_CTRL) + DT_CTRL  # no greater than dt mpc + dt, to prevent too high extraps
 
+  # J.R. PID loop in longcontrol.py is going to do all the work using just v_cruise_kph
   a_acc_sol = plan.aStart + (dt / LON_MPC_STEP) * (plan.aTarget - plan.aStart)
   v_acc_sol = plan.vStart + dt * (a_acc_sol + plan.aStart) / 2.0
 
