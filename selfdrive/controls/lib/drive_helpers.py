@@ -84,6 +84,6 @@ def initialize_v_cruise(v_ego, buttonEvents, v_cruise_last):
       return v_cruise_last
 
   if (v_ego < .1):
-    return int(round(V_CRUISE_SET_WHEN_STOPPED * CV.MS_TO_KPH))
+    return int(round(V_CRUISE_SET_WHEN_STOPPED))
 
   return int(round(clip(v_ego * CV.MS_TO_KPH, 0, V_CRUISE_MAX)))

@@ -94,30 +94,34 @@ class Planner():
 
   def choose_solution(self, v_cruise_setpoint, enabled):
     if enabled:
-      solutions = {'model': self.v_model, 'cruise': self.v_cruise}
-      if self.mpc1.prev_lead_status:
-        solutions['mpc1'] = self.mpc1.v_mpc
-      if self.mpc2.prev_lead_status:
-        solutions['mpc2'] = self.mpc2.v_mpc
+      self.v_acc = self.v_cruise
+      self.a_acc = self.a_cruise
+      self.v_acc_future =  v_cruise_setpoint
 
-      slowest = min(solutions, key=solutions.get)
+      #solutions = {'model': self.v_model, 'cruise': self.v_cruise}
+      #if self.mpc1.prev_lead_status:
+      #  solutions['mpc1'] = self.mpc1.v_mpc
+      #if self.mpc2.prev_lead_status:
+      #  solutions['mpc2'] = self.mpc2.v_mpc
 
-      self.longitudinalPlanSource = slowest
+      #slowest = min(solutions, key=solutions.get)
+
+      #self.longitudinalPlanSource = slowest
       # Choose lowest of MPC and cruise
-      if slowest == 'mpc1':
-        self.v_acc = self.mpc1.v_mpc
-        self.a_acc = self.mpc1.a_mpc
-      elif slowest == 'mpc2':
-        self.v_acc = self.mpc2.v_mpc
-        self.a_acc = self.mpc2.a_mpc
-      elif slowest == 'cruise':
-        self.v_acc = self.v_cruise
-        self.a_acc = self.a_cruise
-      elif slowest == 'model':
-        self.v_acc = self.v_model
-        self.a_acc = self.a_model
+      #if slowest == 'mpc1':
+      #  self.v_acc = self.mpc1.v_mpc
+      #  self.a_acc = self.mpc1.a_mpc
+      #elif slowest == 'mpc2':
+      #  self.v_acc = self.mpc2.v_mpc
+      #  self.a_acc = self.mpc2.a_mpc
+      #elif slowest == 'cruise':
+      #  self.v_acc = self.v_cruise
+      #  self.a_acc = self.a_cruise
+      #elif slowest == 'model':
+      #  self.v_acc = self.v_model
+      #  self.a_acc = self.a_model
 
-    self.v_acc_future = min([self.mpc1.v_mpc_future, self.mpc2.v_mpc_future, v_cruise_setpoint])
+    #self.v_acc_future = min([self.mpc1.v_mpc_future, self.mpc2.v_mpc_future, v_cruise_setpoint])
 
   def update(self, sm, pm, CP, VM, PP):
     """Gets called when new radarState is available"""
@@ -146,7 +150,7 @@ class Planner():
       
     self.mpc_frame += 1
     
-    model_speed = MAX_SPEED
+    # model_speed = MAX_SPEED
 
     # Calculate speed for normal cruise control
     if enabled:
@@ -159,8 +163,10 @@ class Planner():
         #accel_limits_turns[1] = min(accel_limits_turns[1], AWARENESS_DECEL)
         #accel_limits_turns[0] = min(accel_limits_turns[0], accel_limits_turns[1])
 
-      self.v_cruise, self.a_cruise = self.v_acc_start, self.a_acc_start
-      self.v_model, self.a_model = self.v_acc_start, self.a_acc_start
+      # J.R. speed smoother would set new speed and accel values, how do we do that
+      # without it??  PID in longcontrol??
+      # self.v_cruise, self.a_cruise = self.v_acc_start, self.a_acc_start
+      # self.v_model, self.a_model = self.v_acc_start, self.a_acc_start
       #self.v_cruise, self.a_cruise = speed_smoother(self.v_acc_start, self.a_acc_start,
       #                                              v_cruise_setpoint,
       #                                              accel_limits_turns[1], accel_limits_turns[0],
@@ -174,7 +180,7 @@ class Planner():
       #                                              LON_MPC_STEP)
 
       # cruise speed can't be negative even if user is distracted
-      self.v_cruise = max(self.v_cruise, 0.)
+      # self.v_cruise = max(self.v_cruise, 0.)
     else:
       starting = long_control_state == LongCtrlState.starting
       a_ego = min(sm['carState'].aEgo, 0.0)

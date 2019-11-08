@@ -266,7 +266,7 @@ class CarInterface(CarInterfaceBase):
       # which is 0 MPH, 22 MPH, and 78 MPH
       ret.longitudinalTuning.kpBP = [0., 10., 35.]
       # These are corresponding Kp values with the above speeds
-      ret.longitudinalTuning.kpV = [0.6, 0.6, 0.6]
+      ret.longitudinalTuning.kpV = [1.5, 1.5, 1.5]
 
       ret.longitudinalTuning.kiBP = [0., 35.]
       ret.longitudinalTuning.kiV = [0.00, 0.00]
