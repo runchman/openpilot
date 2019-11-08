@@ -19,16 +19,20 @@ ButtonType = car.CarState.ButtonEvent.Type
 GearShifter = car.CarState.GearShifter
 
 # compute gas and brake. Called from within the PID loop called by longcontrol.py. 
-# J.R. first test is a bang-bang, we return either max gas or 0
-def compute_gas_honda(accel, speed):
-  creep_brake = 0.0
-  creep_speed = 2.3
-  creep_brake_value = 0.15
-  if speed < creep_speed:
-    creep_brake = (creep_speed - speed) / creep_speed * creep_brake_value
-  return float(accel) / 4.8 - creep_brake
+# Based on speed and error, we return anywhere from 0 (negative error, i.e. we are speeding)
+# to 1.0 (max gas, configured as gasMaxBP and gasMaxV in this file).
+# Initial test, either turn off if we are speeding, or turn on proportional to the error,
+# presuming Kp is 1.0 and the max error we would encounter is 90. Error is Kp * speed_delta,
+# and for now we are using Ki and Kf of zero so error can't go above (speed delta from desired).
+def compute_gas_honda(error, speed):
+  if (error < 0):
+    return 0.0
+  else:
+    # the larger the error, the closer to gas max we return. Gun it if a long way off,
+    # in other words.
+    return interp(error, [0, 90],[0, 1])
 
-def compute_brake_honda(accel, speed):
+def compute_brake_honda(error, speed):
   creep_brake = 0.0
   creep_speed = 2.3
   creep_brake_value = 0.15
@@ -277,7 +281,7 @@ class CarInterface(CarInterfaceBase):
       # which is 0 MPH, 22 MPH, and 78 MPH
       ret.longitudinalTuning.kpBP = [0., 10., 35.]
       # These are corresponding Kp values with the above speeds
-      ret.longitudinalTuning.kpV = [1.5, 1.5, 1.5]
+      ret.longitudinalTuning.kpV = [1.0, 1.0, 1.0]
 
       ret.longitudinalTuning.kiBP = [0., 35.]
       ret.longitudinalTuning.kiV = [0.00, 0.00]
@@ -401,7 +405,7 @@ class CarInterface(CarInterfaceBase):
     # for testing, set this to fixed value
     if ret.enableGasInterceptor:
       ret.gasMaxBP = [0., 3, 8, 35]
-      ret.gasMaxV = [0.6, 0.6, 0.6, 0.6]
+      ret.gasMaxV = [0.2, 0.2, 0.2, 0.2]
       #ret.gasMaxV = [0.2, 0.3, 0.5, 0.6]
     else:
       ret.gasMaxBP = [0.]  # m/s
