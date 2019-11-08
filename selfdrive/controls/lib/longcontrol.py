@@ -1,6 +1,6 @@
 from cereal import log
 from common.numpy_fast import clip, interp
-from selfdrive.controls.lib.pid import PIController
+from selfdrive.controls.lib.pid import PIController2
 from selfdrive.kegman_conf import kegman_conf
 
 kegman = kegman_conf()
