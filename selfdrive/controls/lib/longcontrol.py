@@ -122,12 +122,13 @@ class LongControl():
       deadzone = 0
 
       # setpoint, measured, current speed, ....
-      output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, deadzone=deadzone, feedforward=a_target, freeze_integrator=prevent_overshoot)
-      # don't do any braking, just for testing
-      # output_gb = clip(output_gb,0,gas_max)
+      output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, deadzone=deadzone, feedforward=0, freeze_integrator=prevent_overshoot)
+      # output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, deadzone=deadzone, feedforward=a_target, freeze_integrator=prevent_overshoot)
+      # J.R. don't do any braking, just for testing
+      output_gb = clip(output_gb,0,gas_max)
 
-      if prevent_overshoot:
-        output_gb = min(output_gb, 0.0)
+      # if prevent_overshoot:
+      #  output_gb = min(output_gb, 0.0)
 
     # Intention is to stop, switch to a different brake control until we stop
     elif self.long_control_state == LongCtrlState.stopping:
