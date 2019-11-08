@@ -18,7 +18,17 @@ A_ACC_MAX = max(_A_CRUISE_MAX_V)
 ButtonType = car.CarState.ButtonEvent.Type
 GearShifter = car.CarState.GearShifter
 
-def compute_gb_honda(accel, speed):
+# compute gas and brake. Called from within the PID loop called by longcontrol.py. 
+# J.R. first test is a bang-bang, we return either max gas or 0
+def compute_gas_honda(accel, speed):
+  creep_brake = 0.0
+  creep_speed = 2.3
+  creep_brake_value = 0.15
+  if speed < creep_speed:
+    creep_brake = (creep_speed - speed) / creep_speed * creep_brake_value
+  return float(accel) / 4.8 - creep_brake
+
+def compute_brake_honda(accel, speed):
   creep_brake = 0.0
   creep_speed = 2.3
   creep_brake_value = 0.15
@@ -96,7 +106,8 @@ class CarInterface(CarInterfaceBase):
     if self.CS.CP.carFingerprint == CAR.ACURA_ILX:
       self.compute_gb = get_compute_gb_acura()
     else:
-      self.compute_gb = compute_gb_honda
+      self.compute_gas = compute_gas_honda
+      self.compute_brake = compute_brake_honda
 
   @staticmethod
   def calc_accel_override(a_ego, a_target, v_ego, v_target):

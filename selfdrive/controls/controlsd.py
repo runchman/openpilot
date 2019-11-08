@@ -477,7 +477,7 @@ def controlsd_thread(sm=None, pm=None, can_sock=None):
   startup_alert = get_startup_alert(car_recognized, controller_available)
   AM.add(sm.frame, startup_alert, False)
 
-  LoC = LongControl(CP, CI.compute_gb)
+  LoC = LongControl(CP, CI.compute_gas, CI.compute_brake)
   VM = VehicleModel(CP)
 
   if CP.lateralTuning.which() == 'pid':

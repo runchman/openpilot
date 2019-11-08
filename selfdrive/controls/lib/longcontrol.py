@@ -59,24 +59,24 @@ def long_control_state_trans(active, long_control_state, v_ego, v_target, v_pid,
 
 
 class LongControl():
-  def __init__(self, CP, compute_gb):
+  def __init__(self, CP, compute_gas, compute_brake):
     self.long_control_state = LongCtrlState.off  # initialized to off
 
     # J.R. first thing here, I'd config an additional PID and use one when accelerating, and a
     # different one when decelerating.
-    self.pid = PIController((CP.longitudinalTuning.kpBP, CP.longitudinalTuning.kpV),
+    self.pid = PIController2((CP.longitudinalTuning.kpBP, CP.longitudinalTuning.kpV),
                             (CP.longitudinalTuning.kiBP, CP.longitudinalTuning.kiV),
                             k_f=0,
                             rate=RATE,
                             sat_limit=0.8,
-                            convert=compute_gb)
+                            convert=compute_gas)
 
-    self.decelPid = PIController((CP.longitudinalBrakeTuning.kpBP, CP.longitudinalBrakeTuning.kpV),
+    self.decelPid = PIController2((CP.longitudinalBrakeTuning.kpBP, CP.longitudinalBrakeTuning.kpV),
                             (CP.longitudinalBrakeTuning.kiBP, CP.longitudinalBrakeTuning.kiV),
                             k_f=0,
                             rate=RATE,
                             sat_limit=0.8,
-                            convert=compute_gb)
+                            convert=compute_brake)
     self.v_pid = 0.0
     self.last_output_gb = 0.0
 
