@@ -31,7 +31,8 @@ def compute_gas_honda(error, speed):
   else:
     # the larger the error, the closer to gas max we return. Gun it if a long way off,
     # in other words.
-    return interp(error, [0, 90*CV.MPH_TO_MS],[0, 1])
+    # Scale it to a max error of 50; I have no idea if this makes any sense :(
+    return interp(error, [0, 50*CV.MPH_TO_MS],[0, 1])
 
 def compute_brake_honda(error, speed):
   creep_brake = 0.0
@@ -285,7 +286,7 @@ class CarInterface(CarInterfaceBase):
       ret.longitudinalTuning.kpV = [1.0, 1.0, 1.0]
 
       ret.longitudinalTuning.kiBP = [0., 35.]
-      ret.longitudinalTuning.kiV = [0.00, 0.00]
+      ret.longitudinalTuning.kiV = [0.25, 0.25]
 
       ret.longitudinalBrakeTuning.kpV = [0.4, 0.4, 0.4]
       ret.longitudinalBrakeTuning.kiBP = [0., 35.]
@@ -406,7 +407,7 @@ class CarInterface(CarInterfaceBase):
     # for testing, set this to fixed value
     if ret.enableGasInterceptor:
       ret.gasMaxBP = [0., 3, 8, 35]
-      ret.gasMaxV = [0.2, 0.2, 0.2, 0.2]
+      ret.gasMaxV = [0.6, 0.6, 0.6, 0.6]
       #ret.gasMaxV = [0.2, 0.3, 0.5, 0.6]
     else:
       ret.gasMaxBP = [0.]  # m/s
