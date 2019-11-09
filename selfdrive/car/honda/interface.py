@@ -31,7 +31,7 @@ def compute_gas_honda(error, speed):
   else:
     # the larger the error, the closer to gas max we return. Gun it if a long way off,
     # in other words.
-    return interp(error, [0, 90*CV.MPH_TO_MS],[0, 1])
+    return interp(error, [0, 90*CV.MPH_TO_KPH],[0, 1])
 
 def compute_brake_honda(error, speed):
   creep_brake = 0.0

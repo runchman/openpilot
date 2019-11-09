@@ -141,8 +141,6 @@ class PIController2():
   def update(self, setpoint, measurement, speed=0.0, feedforward=0. ):
     self.speed = speed
 
-    logData("entered pid loop") 
-
     error = float(setpoint - measurement)
     self.p = error * self.k_p
     self.f = feedforward * self.k_f

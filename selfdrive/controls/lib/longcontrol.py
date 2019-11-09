@@ -126,9 +126,9 @@ class LongControl():
       deadzone = 0
 
       # setpoint, measured, current speed, ....
-      # v_pid is in mph, v_ego_pid is in m/s.
-      output_gb = self.pid.update(self.v_pid * CV.MPH_TO_MS, v_ego_pid, speed=v_ego_pid, feedforward=0)
-      logData([self.v_pid * CV.MPH_TO_MS,v_ego_pid,output_gb])
+      # v_pid is in kph and so is v_ego_pid
+      output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, feedforward=0)
+      logData([self.v_pid * CV.KPH_TO_MPH,v_ego_pid * CV.KPH_TO_MPH,output_gb])
 
 
       # output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, deadzone=deadzone, feedforward=a_target, freeze_integrator=prevent_overshoot)
