@@ -1,5 +1,6 @@
 import numpy as np
 from common.numpy_fast import clip, interp
+from selfdrive.debug.dataLogger import logData, logPid
 
 def apply_deadzone(error, deadzone):
   if error > deadzone:
@@ -91,10 +92,12 @@ class PIController():
     return self.control
 
 class PIController2():
-  def __init__(self, k_p, k_i, k_f=1., pos_limit=None, neg_limit=None, rate=100, sat_limit=0.8, convert=None):
+  def __init__(self, k_p, k_i, k_f=1., pos_limit=None, neg_limit=None, rate=100, sat_limit=0.8, convert=None, log_name=None):
     self._k_p = k_p # proportional gain
     self._k_i = k_i # integral gain
     self.k_f = k_f  # feedforward (derivative) gain
+
+    self.log_name = log_name
 
     self.pos_limit = pos_limit
     self.neg_limit = neg_limit
@@ -138,12 +141,16 @@ class PIController2():
   def update(self, setpoint, measurement, speed=0.0, feedforward=0. ):
     self.speed = speed
 
+    logData("entered pid loop") 
+
     error = float(setpoint - measurement)
     self.p = error * self.k_p
     self.f = feedforward * self.k_f
 
     i = self.i + error * self.k_i * self.i_rate
     control = self.p + self.f + i
+
+    logPid(self.log_name,self.k_p,self.k_i,self.k_f,setpoint,measurement,self.p,i,self.f,control)
 
     self.i = i
 

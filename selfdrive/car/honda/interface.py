@@ -24,13 +24,14 @@ GearShifter = car.CarState.GearShifter
 # Initial test, either turn off if we are speeding, or turn on proportional to the error,
 # presuming Kp is 1.0 and the max error we would encounter is 90. Error is Kp * speed_delta,
 # and for now we are using Ki and Kf of zero so error can't go above (speed delta from desired).
+# Values are in m/s
 def compute_gas_honda(error, speed):
   if (error < 0):
     return 0.0
   else:
     # the larger the error, the closer to gas max we return. Gun it if a long way off,
     # in other words.
-    return interp(error, [0, 144],[0, 1])
+    return interp(error, [0, 90*CV.MPH_TO_MS],[0, 1])
 
 def compute_brake_honda(error, speed):
   creep_brake = 0.0

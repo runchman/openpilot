@@ -3,6 +3,7 @@ from common.numpy_fast import clip, interp
 from selfdrive.controls.lib.pid import PIController2
 from selfdrive.kegman_conf import kegman_conf
 from selfdrive.debug.dataLogger import logData
+from selfdrive.config import Conversions as CV
 
 kegman = kegman_conf()
 LongCtrlState = log.ControlsState.LongControlState
@@ -70,14 +71,16 @@ class LongControl():
                             k_f=0,
                             rate=RATE,
                             sat_limit=0.8,
-                            convert=compute_gas)
+                            convert=compute_gas,
+                            log_name="accel")
 
     self.decelPid = PIController2((CP.longitudinalBrakeTuning.kpBP, CP.longitudinalBrakeTuning.kpV),
                             (CP.longitudinalBrakeTuning.kiBP, CP.longitudinalBrakeTuning.kiV),
                             k_f=0,
                             rate=RATE,
                             sat_limit=0.8,
-                            convert=compute_brake)
+                            convert=compute_brake,
+                            log_name="brake")
     self.v_pid = 0.0
     self.last_output_gb = 0.0
 
@@ -123,8 +126,9 @@ class LongControl():
       deadzone = 0
 
       # setpoint, measured, current speed, ....
-      output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, feedforward=0)
-      logData([self.v_pid,v_ego_pid,output_gb])
+      # v_pid is in mph, v_ego_pid is in m/s.
+      output_gb = self.pid.update(self.v_pid * CV.MPH_TO_MS, v_ego_pid, speed=v_ego_pid, feedforward=0)
+      logData([self.v_pid * CV.MPH_TO_MS,v_ego_pid,output_gb])
 
 
       # output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, deadzone=deadzone, feedforward=a_target, freeze_integrator=prevent_overshoot)

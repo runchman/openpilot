@@ -300,12 +300,6 @@ def manager_init(should_register=True):
   crash.bind_user(id=dongle_id)
   crash.bind_extra(version=version, dirty=dirty, is_eon=True)
 
-  logData([3,4,12.0])
-  logData(["a","tomorrow",3.14])
-
-  logPid("accel",1,.01,0.001,45,8,10,20,30,-.8)
-  logPid("accel",1,.01,0.001,45,12,15,25,35,-.6)
-
   os.umask(0)
   try:
     os.mkdir(ROOT, 0o777)
