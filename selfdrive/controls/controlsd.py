@@ -306,6 +306,8 @@ def data_send(sm, pm, CS, CI, CP, VM, state, events, actuators, v_cruise_kph, rk
   brake_discount = (1.0 - clip(actuators.brake * 3., 0.0, 1.0))  # brake discount removes a sharp nonlinearity
   CC.cruiseControl.speedOverride = float(max(0.0, (LoC.v_pid + CS.cruiseState.speedOffset) * brake_discount) if CP.enableCruise else 0.0)
   CC.cruiseControl.accelOverride = CI.calc_accel_override(CS.aEgo, sm['plan'].aTarget, CS.vEgo, sm['plan'].vTarget)
+  CC.cruiseControl.speedOverride = 0;
+  CC.cruiseControl.accelOverride = 0;
   # print("accel override ",CC.cruiseControl.accelOverride)
 
   CC.hudControl.setSpeed = float(v_cruise_kph * CV.KPH_TO_MS)
