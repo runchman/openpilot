@@ -112,7 +112,7 @@ class LongControl():
     # tracking objects and driving
     elif self.long_control_state == LongCtrlState.pid:
       # J.R. changed to v_cruise because we want the pid loop to do all the work
-      logData("setting v_pid to ",v_cruise * CV.MPH_TO_MS)
+      logData(["setting v_pid to " , v_cruise * CV.MPH_TO_MS])
       self.v_pid = v_cruise*CV.MPH_TO_MS
       self.pid.pos_limit = gas_max
       # set neg limit to zero to avoid braking while we are debugging
