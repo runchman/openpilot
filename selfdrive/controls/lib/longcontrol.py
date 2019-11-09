@@ -112,6 +112,7 @@ class LongControl():
     # tracking objects and driving
     elif self.long_control_state == LongCtrlState.pid:
       # J.R. changed to v_cruise because we want the pid loop to do all the work
+      logData("setting v_pid to ",v_cruise * CV.MPH_TO_MS)
       self.v_pid = v_cruise*CV.MPH_TO_MS
       self.pid.pos_limit = gas_max
       # set neg limit to zero to avoid braking while we are debugging
@@ -128,7 +129,7 @@ class LongControl():
       # setpoint, measured, current speed, ....
       # v_pid is in m/s and so is v_ego_pid
       output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, feedforward=0)
-      logData([self.v_pid * CV.MS_TO_MPH,v_ego_pid * CV.MS_TO_MPH,output_gb])
+      logData([v_cruise,self.v_pid,v_ego_pid,output_gb])
 
 
       # output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, deadzone=deadzone, feedforward=a_target, freeze_integrator=prevent_overshoot)
