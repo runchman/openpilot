@@ -7,7 +7,7 @@ import signal
 import subprocess
 import datetime
 from common.spinner import Spinner
-from selfdrive.debug.dataLogger import logData
+from selfdrive.debug.dataLogger import logData,logPid
 
 from common.basedir import BASEDIR
 sys.path.append(os.path.join(BASEDIR, "pyextra"))
@@ -301,6 +301,10 @@ def manager_init(should_register=True):
   crash.bind_extra(version=version, dirty=dirty, is_eon=True)
 
   logData([3,4,12.0])
+  logData(["a","tomorrow",3.14])
+
+  logPid("accel",1,.01,0.001,45,8,10,20,30,-.8)
+  logPid("accel",1,.01,0.001,45,12,15,25,35,-.6)
 
   os.umask(0)
   try:

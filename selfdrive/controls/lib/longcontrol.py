@@ -2,6 +2,7 @@ from cereal import log
 from common.numpy_fast import clip, interp
 from selfdrive.controls.lib.pid import PIController2
 from selfdrive.kegman_conf import kegman_conf
+from selfdrive.debug.dataLogger import logData
 
 kegman = kegman_conf()
 LongCtrlState = log.ControlsState.LongControlState
@@ -123,6 +124,9 @@ class LongControl():
 
       # setpoint, measured, current speed, ....
       output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, feedforward=0)
+      logData([self.v_pid,v_ego_pid,output_gb])
+
+
       # output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, deadzone=deadzone, feedforward=a_target, freeze_integrator=prevent_overshoot)
       # J.R. don't do any braking, just for testing
       output_gb = clip(output_gb,0,gas_max)
