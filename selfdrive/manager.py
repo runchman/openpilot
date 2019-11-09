@@ -7,6 +7,7 @@ import signal
 import subprocess
 import datetime
 from common.spinner import Spinner
+from selfdrive.debug.dataLogger import logData
 
 from common.basedir import BASEDIR
 sys.path.append(os.path.join(BASEDIR, "pyextra"))
@@ -298,6 +299,8 @@ def manager_init(should_register=True):
   cloudlog.bind_global(dongle_id=dongle_id, version=version, dirty=dirty, is_eon=True)
   crash.bind_user(id=dongle_id)
   crash.bind_extra(version=version, dirty=dirty, is_eon=True)
+
+  logData([3,4,12.0])
 
   os.umask(0)
   try:
