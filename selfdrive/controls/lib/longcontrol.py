@@ -122,7 +122,7 @@ class LongControl():
       deadzone = 0
 
       # setpoint, measured, current speed, ....
-      output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, deadzone=deadzone, feedforward=0, freeze_integrator=prevent_overshoot)
+      output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, feedforward=0)
       # output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, deadzone=deadzone, feedforward=a_target, freeze_integrator=prevent_overshoot)
       # J.R. don't do any braking, just for testing
       output_gb = clip(output_gb,0,gas_max)
