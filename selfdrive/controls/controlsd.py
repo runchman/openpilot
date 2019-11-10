@@ -477,7 +477,7 @@ def controlsd_thread(sm=None, pm=None, can_sock=None):
   startup_alert = get_startup_alert(car_recognized, controller_available)
   AM.add(sm.frame, startup_alert, False)
 
-  LoC = LongControl(CP, CI.compute_gas, CI.compute_brake)
+  LoC = LongControl(sm, CP, CI.compute_gas, CI.compute_brake)
   VM = VehicleModel(CP)
 
   if CP.lateralTuning.which() == 'pid':
@@ -555,6 +555,7 @@ def controlsd_thread(sm=None, pm=None, can_sock=None):
     # J.R. allow engagement even w/o lead car, that way when driver lifts off brake we are off to the races
     #if CS.brakePressed and sm['plan'].vTargetFuture >= STARTING_TARGET_SPEED and not CP.radarOffCan and CS.vEgo < 0.3:
     #  events.append(create_event('noTarget', [ET.NO_ENTRY, ET.IMMEDIATE_DISABLE]))
+    # J.R. here we want to update longState to "stoppedNoTarget"
 
     if not read_only:
       # update control state

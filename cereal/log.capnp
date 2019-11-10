@@ -478,9 +478,15 @@ struct ControlsState @0x97ff69c53601abf1 {
 
   enum LongControlState {
     off @0;
-    pid @1;
+    pidDEPRECATED @1;
     stopping @2;
-    starting @3;
+    startingDEPRECATED @3;
+    startingNoLead @4;
+    startingWithLead @5;
+    following @6;
+    slowing @7;
+    coasting @8;
+    stopped @9;
   }
 
   enum AlertStatus {

@@ -1,6 +1,6 @@
 import numpy as np
 from common.numpy_fast import clip, interp
-from selfdrive.debug.dataLogger import logData, logPid
+from selfdrive.debug.dataLogger import logPid
 
 def apply_deadzone(error, deadzone):
   if error > deadzone:

@@ -27,6 +27,9 @@ RATE = 100.0
 def long_control_state_trans(active, long_control_state, v_ego, v_target, v_pid,
                              output_gb, brake_pressed, cruise_standstill):
   """Update longitudinal control state machine"""
+
+  logData(["self.sm haslead",self.sm['plan'].hasLead])
+
   stopping_condition = (v_ego < 2.0 and cruise_standstill) or \
                        (v_ego < STOPPING_EGO_SPEED and \
                         ((v_pid < STOPPING_TARGET_SPEED and v_target < STOPPING_TARGET_SPEED) or
@@ -61,8 +64,10 @@ def long_control_state_trans(active, long_control_state, v_ego, v_target, v_pid,
 
 
 class LongControl():
-  def __init__(self, CP, compute_gas, compute_brake):
+  def __init__(self, SM, CP, compute_gas, compute_brake):
     self.long_control_state = LongCtrlState.off  # initialized to off
+
+    self.sm = SM
 
     # J.R. first thing here, I'd config an additional PID and use one when accelerating, and a
     # different one when decelerating.
@@ -119,9 +124,6 @@ class LongControl():
       self.pid.neg_limit = - brake_max
       self.pid.neg_limit = 0
 
-      # Toyota starts braking more when it thinks you want to stop
-      # Freeze the integrator so we don't accelerate to compensate, and don't allow positive acceleration
-      #prevent_overshoot = not CP.stoppingControl and v_ego < 1.5 and v_target_future < 0.7
       prevent_overshoot = False
       #deadzone = interp(v_ego_pid, CP.longitudinalTuning.deadzoneBP, CP.longitudinalTuning.deadzoneV)
       deadzone = 0
@@ -129,12 +131,13 @@ class LongControl():
       # setpoint, measured, current speed, ....
       # v_pid is in m/s and so is v_ego_pid
       output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, feedforward=0)
+
       # v_cruise is in kph
       logData([v_cruise,self.v_pid,v_ego_pid,output_gb])
 
-
       # output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, deadzone=deadzone, feedforward=a_target, freeze_integrator=prevent_overshoot)
-      # J.R. don't do any braking, just for testing
+      # J.R. don't do any braking, just for testing. Actually here we are in steady-state cruising,
+      # so we wouldn't do any braking anyway.
       output_gb = clip(output_gb,0,gas_max)
 
       # if prevent_overshoot:

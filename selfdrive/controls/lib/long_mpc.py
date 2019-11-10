@@ -6,9 +6,9 @@ import selfdrive.messaging as messaging
 from selfdrive.swaglog import cloudlog
 from common.realtime import sec_since_boot
 from selfdrive.controls.lib.radar_helpers import _LEAD_ACCEL_TAU
-from selfdrive.controls.lib.longitudinal_mpc import libmpc_py
-from selfdrive.controls.lib.drive_helpers import MPC_COST_LONG
+#from selfdrive.controls.lib.longitudinal_mpc import libmpc_py
 from selfdrive.kegman_conf import kegman_conf
+from selfdrive.debug.dataLogger import logData
 
 # One, two and three bar distances (in s)
 kegman = kegman_conf()
@@ -71,6 +71,8 @@ LOG_MPC = os.environ.get('LOG_MPC', False)
 class LongitudinalMpc():
   def __init__(self, mpc_id):
     self.mpc_id = mpc_id
+    self.mpc_solution = []
+    self.cur_state = []
 
     self.setup_mpc()
     self.v_mpc = 0.0
@@ -82,8 +84,6 @@ class LongitudinalMpc():
     self.new_lead = False
     self.v_rel = 0.0
     self.lastTR = 2
-    self.last_cloudlog_t = 0.0
-    self.v_rel = 10
     self.last_cloudlog_t = 0.0
     
     self.bp_counter = 0  
@@ -116,12 +116,6 @@ class LongitudinalMpc():
     pm.send('liveLongitudinalMpc', dat)
 
   def setup_mpc(self):
-    ffi, self.libmpc = libmpc_py.get_libmpc(self.mpc_id)
-    self.libmpc.init(MPC_COST_LONG.TTC, MPC_COST_LONG.DISTANCE,
-                     MPC_COST_LONG.ACCELERATION, MPC_COST_LONG.JERK)
-
-    self.mpc_solution = ffi.new("log_t *")
-    self.cur_state = ffi.new("state_t *")
     self.cur_state[0].v_ego = 0
     self.cur_state[0].a_ego = 0
     self.a_lead_tau = _LEAD_ACCEL_TAU
@@ -137,7 +131,7 @@ class LongitudinalMpc():
     self.cur_state[0].x_ego = 0.0
 
     if lead is not None and lead.status:
-      x_lead = max(0, lead.dRel - STOPPING_DISTANCE)  # increase stopping distance to car by X [m]
+      x_lead = max(0, lead.dRel)  
       v_lead = max(0.0, lead.vLead)
       a_lead = lead.aLeadK
 
@@ -148,7 +142,6 @@ class LongitudinalMpc():
       self.a_lead_tau = max(lead.aLeadTau, (a_lead ** 2 * math.pi) / (2 * (v_lead + 0.01) ** 2))
       self.new_lead = False
       if not self.prev_lead_status or abs(x_lead - self.prev_lead_x) > 2.5:
-        self.libmpc.init_with_simulation(self.v_mpc, x_lead, v_lead, a_lead, self.a_lead_tau)
         self.new_lead = True
 
       self.prev_lead_status = True
@@ -158,8 +151,8 @@ class LongitudinalMpc():
     else:
       self.prev_lead_status = False
       # Fake a fast lead car, so mpc keeps running
-      self.cur_state[0].x_l = 50.0
-      self.cur_state[0].v_l = v_ego + 10.0
+      # self.cur_state[0].x_l = 50.0
+      # self.cur_state[0].v_l = v_ego + 10.0
       a_lead = 0.0
       v_lead = 0.0
       self.a_lead_tau = _LEAD_ACCEL_TAU
@@ -200,7 +193,7 @@ class LongitudinalMpc():
       else:
         TR = interp(-self.v_rel, H_ONE_BAR_PROFILE_BP, self.oneBarHwy) 
       if CS.readdistancelines != self.lastTR:
-        self.libmpc.init(MPC_COST_LONG.TTC, 1.0, MPC_COST_LONG.ACCELERATION, MPC_COST_LONG.JERK)
+        #self.libmpc.init(MPC_COST_LONG.TTC, 1.0, MPC_COST_LONG.ACCELERATION, MPC_COST_LONG.JERK)
         self.lastTR = CS.readdistancelines  
 
     elif CS.readdistancelines == 2:
@@ -210,7 +203,7 @@ class LongitudinalMpc():
       else:
         TR = interp(-self.v_rel, H_TWO_BAR_PROFILE_BP, self.twoBarHwy)
       if CS.readdistancelines != self.lastTR:
-        self.libmpc.init(MPC_COST_LONG.TTC, MPC_COST_LONG.DISTANCE, MPC_COST_LONG.ACCELERATION, MPC_COST_LONG.JERK)
+        #self.libmpc.init(MPC_COST_LONG.TTC, MPC_COST_LONG.DISTANCE, MPC_COST_LONG.ACCELERATION, MPC_COST_LONG.JERK)
         self.lastTR = CS.readdistancelines  
 
     elif CS.readdistancelines == 3:
@@ -220,26 +213,26 @@ class LongitudinalMpc():
       else:
         TR = interp(-self.v_rel, H_THREE_BAR_PROFILE_BP, self.threeBarHwy)
       if CS.readdistancelines != self.lastTR:
-        self.libmpc.init(MPC_COST_LONG.TTC, MPC_COST_LONG.DISTANCE, MPC_COST_LONG.ACCELERATION, MPC_COST_LONG.JERK)
+        #self.libmpc.init(MPC_COST_LONG.TTC, MPC_COST_LONG.DISTANCE, MPC_COST_LONG.ACCELERATION, MPC_COST_LONG.JERK)
         self.lastTR = CS.readdistancelines   
 
     elif CS.readdistancelines == 4:
       TR = FOUR_BAR_DISTANCE
       if CS.readdistancelines != self.lastTR:
-        self.libmpc.init(MPC_COST_LONG.TTC, MPC_COST_LONG.DISTANCE, MPC_COST_LONG.ACCELERATION, MPC_COST_LONG.JERK) 
+        #self.libmpc.init(MPC_COST_LONG.TTC, MPC_COST_LONG.DISTANCE, MPC_COST_LONG.ACCELERATION, MPC_COST_LONG.JERK) 
         self.lastTR = CS.readdistancelines      
 
     else:
      TR = TWO_BAR_DISTANCE # if readdistancelines != 1,2,3,4
-     self.libmpc.init(MPC_COST_LONG.TTC, MPC_COST_LONG.DISTANCE, MPC_COST_LONG.ACCELERATION, MPC_COST_LONG.JERK)
+     #self.libmpc.init(MPC_COST_LONG.TTC, MPC_COST_LONG.DISTANCE, MPC_COST_LONG.ACCELERATION, MPC_COST_LONG.JERK)
 
     
     t = sec_since_boot()
-    n_its = self.libmpc.run_mpc(self.cur_state, self.mpc_solution, self.a_lead_tau, a_lead, TR)
+    #n_its = self.libmpc.run_mpc(self.cur_state, self.mpc_solution, self.a_lead_tau, a_lead, TR)
     duration = int((sec_since_boot() - t) * 1e9)
 
-    if LOG_MPC:
-      self.send_mpc_solution(pm, n_its, duration)
+    #if LOG_MPC:
+    #  self.send_mpc_solution(pm, n_its, duration)
 
     # Get solution. MPC timestep is 0.2 s, so interpolation to 0.05 s is needed
     self.v_mpc = self.mpc_solution[0].v_ego[1]
@@ -257,8 +250,8 @@ class LongitudinalMpc():
         cloudlog.warning("Longitudinal mpc %d reset - backwards: %s crashing: %s nan: %s" % (
                           self.mpc_id, backwards, crashing, nans))
 
-      self.libmpc.init(MPC_COST_LONG.TTC, MPC_COST_LONG.DISTANCE,
-                       MPC_COST_LONG.ACCELERATION, MPC_COST_LONG.JERK)
+      #self.libmpc.init(MPC_COST_LONG.TTC, MPC_COST_LONG.DISTANCE,
+      #                 MPC_COST_LONG.ACCELERATION, MPC_COST_LONG.JERK)
       self.cur_state[0].v_ego = v_ego
       self.cur_state[0].a_ego = 0.0
       self.v_mpc = v_ego

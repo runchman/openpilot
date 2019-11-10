@@ -9,7 +9,7 @@ from cereal import car
 from common.realtime import sec_since_boot, DT_PLAN
 from selfdrive.swaglog import cloudlog
 from selfdrive.config import Conversions as CV
-from selfdrive.controls.lib.speed_smoother import speed_smoother
+# from selfdrive.controls.lib.speed_smoother import speed_smoother
 from selfdrive.controls.lib.longcontrol import LongCtrlState, MIN_CAN_SPEED
 from selfdrive.controls.lib.fcw import FCWChecker
 from selfdrive.controls.lib.long_mpc import LongitudinalMpc
@@ -71,7 +71,7 @@ class Planner():
     self.CP = CP
 
     self.mpc1 = LongitudinalMpc(1)
-    self.mpc2 = LongitudinalMpc(2)
+    #self.mpc2 = LongitudinalMpc(2)
 
     self.v_acc_start = 0.0
     self.a_acc_start = 0.0
@@ -136,12 +136,6 @@ class Planner():
     lead_1 = sm['radarState'].leadOne
     lead_2 = sm['radarState'].leadTwo
 
-    # We are in either of the following states:
-    # 1. stopped
-    # 2. cruising
-    # 3. braking 
-    # 4. accelerating
-
     enabled = (long_control_state == LongCtrlState.pid) or (long_control_state == LongCtrlState.stopping)
 
     if self.mpc_frame % 1000 == 0:
@@ -194,24 +188,25 @@ class Planner():
       self.a_cruise = reset_accel
 
     self.mpc1.set_cur_state(self.v_acc_start, self.a_acc_start)
-    self.mpc2.set_cur_state(self.v_acc_start, self.a_acc_start)
+    #self.mpc2.set_cur_state(self.v_acc_start, self.a_acc_start)
 
-    self.mpc1.update(pm, sm['carState'], lead_1, v_cruise_setpoint)
-    self.mpc2.update(pm, sm['carState'], lead_2, v_cruise_setpoint)
+    #self.mpc1.update(pm, sm['carState'], lead_1, v_cruise_setpoint)
+    #self.mpc2.update(pm, sm['carState'], lead_2, v_cruise_setpoint)
 
-    self.choose_solution(v_cruise_setpoint, enabled)
+    # self.choose_solution(v_cruise_setpoint, enabled)
 
     # determine fcw
-    if self.mpc1.new_lead:
-      self.fcw_checker.reset_lead(cur_time)
+    #if self.mpc1.new_lead:
+    #  self.fcw_checker.reset_lead(cur_time)
 
     blinkers = sm['carState'].leftBlinker or sm['carState'].rightBlinker
-    fcw = self.fcw_checker.update(self.mpc1.mpc_solution, cur_time,
-                                  sm['controlsState'].active,
-                                  v_ego, sm['carState'].aEgo,
-                                  lead_1.dRel, lead_1.vLead, lead_1.aLeadK,
-                                  lead_1.yRel, lead_1.vLat,
-                                  lead_1.fcw, blinkers) and not sm['carState'].brakePressed
+    #fcw = self.fcw_checker.update(self.mpc1.mpc_solution, cur_time,
+    #                              sm['controlsState'].active,
+    #                              v_ego, sm['carState'].aEgo,
+    #                              lead_1.dRel, lead_1.vLead, lead_1.aLeadK,
+    #                             lead_1.yRel, lead_1.vLat,
+    #                              lead_1.fcw, blinkers) and not sm['carState'].brakePressed
+    fcw = False
     if fcw:
       cloudlog.info("FCW triggered %s", self.fcw_checker.counters)
 
