@@ -189,13 +189,12 @@ class CarController():
         # turn the brake pump off, and we don't want that. Stock ACC does not send the cancel cmd when it is braking.
         if CS.CP.enableGasInterceptor:
           pcm_cancel_cmd = False
-    #    J.R. I want to be SURE we aren't causing any braking while I debug the accel loop
-    #    can_sends.append(hondacan.create_brake_command(self.packer, apply_brake, pump_on,
-    #      pcm_override, pcm_cancel_cmd, hud.fcw, idx, CS.CP.carFingerprint, CS.CP.isPandaBlack))
+        can_sends.append(hondacan.create_brake_command(self.packer, apply_brake, pump_on,
+          pcm_override, pcm_cancel_cmd, hud.fcw, idx, CS.CP.carFingerprint, CS.CP.isPandaBlack))
         self.apply_brake_last = apply_brake
 
         # don't give a gas command if we just gave a brake command
-        if CS.CP.enableGasInterceptor and (apply_brake <= 0):
+        if CS.CP.enableGasInterceptor: # and (apply_brake <= 0):
           can_sends.append(create_gas_command(self.packer, apply_gas, idx))
 
     return can_sends
