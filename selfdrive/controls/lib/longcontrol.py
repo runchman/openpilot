@@ -24,11 +24,11 @@ _MAX_SPEED_ERROR_V = [1.5, 1.5]  # max positive v_pid error VS actual speed; thi
 RATE = 100.0
 
 
-def long_control_state_trans(active, long_control_state, v_ego, v_target, v_pid,
+def long_control_state_trans(long_plan, active, long_control_state, v_ego, v_target, v_pid,
                              output_gb, brake_pressed, cruise_standstill):
   """Update longitudinal control state machine"""
 
-  logData(["self.sm haslead",self.sm['plan'].hasLead])
+  logData(["self.sm haslead",long_plan.hasLead])
 
   stopping_condition = (v_ego < 2.0 and cruise_standstill) or \
                        (v_ego < STOPPING_EGO_SPEED and \
@@ -103,7 +103,7 @@ class LongControl():
 
     # Update state machine
     output_gb = self.last_output_gb
-    self.long_control_state = long_control_state_trans(active, self.long_control_state, v_ego,
+    self.long_control_state = long_control_state_trans(self.sm['plan'], active, self.long_control_state, v_ego,
                                                        v_target_future, self.v_pid, output_gb,
                                                        brake_pressed, cruise_standstill)
 
