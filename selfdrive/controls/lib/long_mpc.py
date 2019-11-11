@@ -12,7 +12,7 @@ from selfdrive.debug.dataLogger import logData
 
 
 #lead appears < this distance in meters, then this is a cutoff
-CUTOFF_DISTANCE = 5       
+CUTOFF_DISTANCE = 5.0
 
 # One, two and three bar distances (in s)
 kegman = kegman_conf()
@@ -75,8 +75,8 @@ LOG_MPC = os.environ.get('LOG_MPC', False)
 class LongitudinalMpc():
   def __init__(self, mpc_id):
     self.mpc_id = mpc_id
-    self.mpc_solution = []
-    self.cur_state = []
+    self.mpc_solution = [0] * 10
+    self.cur_state = [0] * 10
 
     self.setup_mpc()
     self.v_mpc = 0.0
@@ -153,7 +153,7 @@ class LongitudinalMpc():
       if not self.prev_lead_status or abs(x_lead - self.prev_lead_x) > 2.5:
         self.new_lead = True
 
-      if self.new_lead and x_lead < CUTOFF_DISTANCE:
+      if (self.new_lead and x_lead < CUTOFF_DISTANCE):
         self.cutoff = True
 
       self.prev_lead_status = True
