@@ -657,6 +657,8 @@ struct Plan {
   aTargetMinDEPRECATED @4 :Float32;
   aTargetMaxDEPRECATED @5 :Float32;
   aTarget @18 :Float32;
+  leadTurnoff @32 :Bool;
+  gotCutoff @33 :Bool;
 
   vStart @26 :Float32;
   aStart @27 :Float32;
