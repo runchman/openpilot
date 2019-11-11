@@ -136,7 +136,7 @@ class Planner():
     lead_1 = sm['radarState'].leadOne
     lead_2 = sm['radarState'].leadTwo
 
-    enabled = (long_control_state == LongCtrlState.pid) or (long_control_state == LongCtrlState.stopping)
+    enabled = (long_control_state == LongCtrlState.steadyState) or (long_control_state == LongCtrlState.stopping)
 
     if self.mpc_frame % 1000 == 0:
       self.kegman = kegman_conf()
@@ -234,6 +234,8 @@ class Planner():
     plan_send.plan.aTarget = float(self.a_acc)
     plan_send.plan.vTargetFuture = float(self.v_acc_future)
     plan_send.plan.hasLead = self.mpc1.prev_lead_status
+    plan_send.plan.leadTurnoff = self.mpc1.leadTurnoff
+    plan_send.plan.gotCutoff = self.mpc1.cutoff
     plan_send.plan.longitudinalPlanSource = self.longitudinalPlanSource
 
     radar_valid = not (radar_dead or radar_fault)
