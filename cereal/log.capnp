@@ -487,6 +487,7 @@ struct ControlsState @0x97ff69c53601abf1 {
     slowing @7;
     coasting @8;
     stopped @9;
+    steadyState @10;
   }
 
   enum AlertStatus {

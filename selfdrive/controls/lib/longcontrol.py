@@ -28,7 +28,9 @@ def long_control_state_trans(long_plan, active, long_control_state, v_ego, v_tar
                              output_gb, brake_pressed, cruise_standstill):
   """Update longitudinal control state machine"""
 
+
   logData(["self.sm haslead",long_plan.hasLead])
+  
 
   stopping_condition = (v_ego < 2.0 and cruise_standstill) or \
                        (v_ego < STOPPING_EGO_SPEED and \
@@ -41,7 +43,9 @@ def long_control_state_trans(long_plan, active, long_control_state, v_ego, v_tar
   if not active:
     long_control_state = LongCtrlState.off
   else:
-    long_control_state = LongCtrlState.pid
+    long_control_state = LongCtrlState.steadyState
+    if (long_plan.hasLead):
+      long_control_state = LongCtrlState.following
     #if long_control_state == LongCtrlState.off:
     #  if active:
     #    long_control_state = LongCtrlState.pid
@@ -64,10 +68,11 @@ def long_control_state_trans(long_plan, active, long_control_state, v_ego, v_tar
 
 
 class LongControl():
-  def __init__(self, SM, CP, compute_gas, compute_brake):
+  def __init__(self, AM, SM, CP, compute_gas, compute_brake):
     self.long_control_state = LongCtrlState.off  # initialized to off
 
     self.sm = SM
+    self.am = AM # alert manager
 
     # J.R. first thing here, I'd config an additional PID and use one when accelerating, and a
     # different one when decelerating.
@@ -94,7 +99,7 @@ class LongControl():
     self.pid.reset()
     self.v_pid = v_pid
 
-  def update(self, active, v_ego, brake_pressed, standstill, cruise_standstill, v_cruise, v_target, v_target_future, a_target, CP):
+  def update(self, frame, active, v_ego, brake_pressed, standstill, cruise_standstill, v_cruise, v_target, v_target_future, a_target, CP):
     """Update longitudinal control. This updates the state machine and runs a PID loop"""
 
     # Actuation limits
@@ -103,9 +108,13 @@ class LongControl():
 
     # Update state machine
     output_gb = self.last_output_gb
+    last_state = self.long_control_state
     self.long_control_state = long_control_state_trans(self.sm['plan'], active, self.long_control_state, v_ego,
                                                        v_target_future, self.v_pid, output_gb,
                                                        brake_pressed, cruise_standstill)
+    # just a test see if I can pass an alert
+    if (self.long_control_state != last_state):
+      self.am.add(frame,"promptDriverDistracted")
 
     v_ego_pid = max(v_ego, MIN_CAN_SPEED)  # Without this we get jumps, CAN bus reports 0 when speed < 0.3
 
