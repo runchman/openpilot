@@ -7,6 +7,7 @@ import signal
 import subprocess
 import datetime
 from common.spinner import Spinner
+from selfdrive.debug.dataLogger import logData
 
 from common.basedir import BASEDIR
 sys.path.append(os.path.join(BASEDIR, "pyextra"))
@@ -323,19 +324,25 @@ def manager_thread():
   cloudlog.info("manager start")
   cloudlog.info({"environ": os.environ})
 
+  logData("manager_thread") 
+
   # save boot log
   subprocess.call(["./loggerd", "--bootlog"], cwd=os.path.join(BASEDIR, "selfdrive/loggerd"))
 
+  logData("params = params") 
   params = Params()
 
   # start daemon processes
+  logData("start daemon") 
   for p in daemon_processes:
     start_daemon_process(p, params)
 
+  logData("start persistent") 
   # start persistent processes
   for p in persistent_processes:
     start_managed_process(p)
 
+  logData("start frame") 
   # start frame
   pm_apply_packages('enable')
   system("LD_LIBRARY_PATH= appops set ai.comma.plus.offroad SU allow")
@@ -346,6 +353,7 @@ def manager_thread():
 
   logger_dead = False
 
+  logData("while 1") 
   while 1:
     msg = messaging.recv_sock(thermal_sock, wait=True)
 
