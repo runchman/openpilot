@@ -1544,6 +1544,8 @@ struct LiveLongitudinalMpcData {
   mpcId @8 :UInt32;
   calculationTime @9 :UInt64;
   cost @10 :Float64;
+  cutoff @11:Bool;         # did we just get cutoff
+  lead_turnoff @12:Bool;   # did lead car just turn off
 }
 
 

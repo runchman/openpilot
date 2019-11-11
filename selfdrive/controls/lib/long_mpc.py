@@ -10,6 +10,10 @@ from selfdrive.controls.lib.radar_helpers import _LEAD_ACCEL_TAU
 from selfdrive.kegman_conf import kegman_conf
 from selfdrive.debug.dataLogger import logData
 
+
+#lead appears < this distance in meters, then this is a cutoff
+CUTOFF_DISTANCE = 5       
+
 # One, two and three bar distances (in s)
 kegman = kegman_conf()
 if "ONE_BAR_DISTANCE" in kegman.conf:
@@ -85,6 +89,9 @@ class LongitudinalMpc():
     self.v_rel = 0.0
     self.lastTR = 2
     self.last_cloudlog_t = 0.0
+
+    self.cutoff = False
+    self.lead_turnoff = False
     
     self.bp_counter = 0  
     
@@ -113,6 +120,8 @@ class LongitudinalMpc():
     dat.liveLongitudinalMpc.qpIterations = qp_iterations
     dat.liveLongitudinalMpc.mpcId = self.mpc_id
     dat.liveLongitudinalMpc.calculationTime = calculation_time
+    dat.liveLongitudinalMpc.cutoff = self.cutoff
+    dat.liveLongitudinalMpc.lead_turnoff = self.lead_turnoff
     pm.send('liveLongitudinalMpc', dat)
 
   def setup_mpc(self):
@@ -144,12 +153,16 @@ class LongitudinalMpc():
       if not self.prev_lead_status or abs(x_lead - self.prev_lead_x) > 2.5:
         self.new_lead = True
 
+      if self.new_lead and x_lead < CUTOFF_DISTANCE:
+        self.cutoff = True
+
       self.prev_lead_status = True
       self.prev_lead_x = x_lead
       self.cur_state[0].x_l = x_lead
       self.cur_state[0].v_l = v_lead
     else:
       self.prev_lead_status = False
+      self.cutoff = False
       # Fake a fast lead car, so mpc keeps running
       # self.cur_state[0].x_l = 50.0
       # self.cur_state[0].v_l = v_ego + 10.0
