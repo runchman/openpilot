@@ -91,7 +91,7 @@ class LongitudinalMpc():
     self.last_cloudlog_t = 0.0
 
     self.cutoff = False
-    self.lead_turnoff = False
+    self.leadTurnoff = False
     
     self.bp_counter = 0  
     
@@ -121,7 +121,7 @@ class LongitudinalMpc():
     dat.liveLongitudinalMpc.mpcId = self.mpc_id
     dat.liveLongitudinalMpc.calculationTime = calculation_time
     dat.liveLongitudinalMpc.cutoff = self.cutoff
-    dat.liveLongitudinalMpc.lead_turnoff = self.lead_turnoff
+    dat.liveLongitudinalMpc.leadTurnoff = self.leadTurnoff
     pm.send('liveLongitudinalMpc', dat)
 
   def setup_mpc(self):
