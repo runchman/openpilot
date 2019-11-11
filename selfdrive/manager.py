@@ -541,17 +541,22 @@ def main():
 
   with Spinner() as spinner:
       spinner.update("0") # Show progress bar
+      logData("manager_update")
       manager_update()
+      logData("manager_init")
       manager_init()
+      logData("manager_prepare")
       manager_prepare(spinner)
 
   if os.getenv("PREPAREONLY") is not None:
+    logData("returning with PREPAREONLY!!!")
     return
 
   # SystemExit on sigterm
   signal.signal(signal.SIGTERM, lambda signum, frame: sys.exit(1))
 
   try:
+    logData("try manager thread")
     manager_thread()
   except Exception:
     traceback.print_exc()
