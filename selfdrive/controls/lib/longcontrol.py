@@ -124,7 +124,7 @@ class LongControl():
       output_gb = 0.
 
     # tracking objects and driving
-    elif self.long_control_state == LongCtrlState.pid:
+    elif self.long_control_state == LongCtrlState.steadyState:
       # J.R. changed to v_cruise because we want the pid loop to do all the work
       # NOTE: v_cruise is in kph
       self.v_pid = v_cruise*CV.KPH_TO_MS
