@@ -43,26 +43,66 @@ def long_control_state_trans(long_plan, active, long_control_state, v_ego, v_tar
   if not active:
     long_control_state = LongCtrlState.off
   else:
+    # enum LongControlState {
+      # off @0;
+      # pidDEPRECATED @1;
+      # stopping @2;
+      # startingDEPRECATED @3;
+      # startingNoLead @4;
+      # startingWithLead @5;
+      # following @6;
+      # slowing @7;
+      # coasting @8;
+      # stopped @9;
+      # steadyState @10;
+    # }
+    # force to steadyState for now
+    # J.R. change this to be event focused rather than prior state focused?
+    # if last_plan_event != none:
+    #   if event == gotCutoff:
+    #      long_control_state = LongCtrlState.following
+    #   if event == leadTurnoff:
+    #      long_control_state = LongCtrlState.startingNoLead
+    #   if event == leadStopped:
+    #      long_control_state = LongCtrlState.stopped
+    #   if event == overTakingFarLead:
+    #   if event == leadPulledAway:
+    #      long_control_state = LongCtrlState.startingNoLead
+    #
+    #
+    #
+    #
     long_control_state = LongCtrlState.steadyState
-    if (long_plan.hasLead):
-      long_control_state = LongCtrlState.following
-    #if long_control_state == LongCtrlState.off:
-    #  if active:
-    #    long_control_state = LongCtrlState.pid
 
-    #elif long_control_state == LongCtrlState.pid:
-    #  if stopping_condition:
-    #    long_control_state = LongCtrlState.stopping
+    if (long_control_state == LongCtrlState.off):
+      long_control_state = LongCtrlState.steadyState
 
-    #elif long_control_state == LongCtrlState.stopping:
-    #  if starting_condition:
-    #    long_control_state = LongCtrlState.starting
+    elif (long_control_state == LongCtrlState.stopping):
+      long_control_state = LongCtrlState.steadyState
 
-    #elif long_control_state == LongCtrlState.starting:
-    #  if stopping_condition:
-    #    long_control_state = LongCtrlState.stopping
-    #  elif output_gb >= -BRAKE_THRESHOLD_TO_PID:
-    #    long_control_state = LongCtrlState.pid
+    elif (long_control_state == LongCtrlState.startingNoLead):
+      long_control_state = LongCtrlState.steadyState
+
+    elif (long_control_state == LongCtrlState.startingWithLead):
+      long_control_state = LongCtrlState.steadyState
+
+    elif (long_control_state == LongCtrlState.following):
+      long_control_state = LongCtrlState.steadyState
+
+    elif (long_control_state == LongCtrlState.slowing):
+      long_control_state = LongCtrlState.steadyState
+
+    elif (long_control_state == LongCtrlState.coasting):
+      long_control_state = LongCtrlState.steadyState
+
+    elif (long_control_state == LongCtrlState.stopped):
+      long_control_state = LongCtrlState.stopped
+
+    elif (long_control_state == LongCtrlState.steadyState):
+      if (long_plan.hasLead or long_plan.gotCutoff):
+        long_control_state = LongCtrlState.following
+      if (long_plan.leadTurnoff):
+        long_control_state = LongCtrlState.startingNoLead
 
   return long_control_state
 
