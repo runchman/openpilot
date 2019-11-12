@@ -6,7 +6,7 @@ import selfdrive.messaging as messaging
 from selfdrive.swaglog import cloudlog
 from common.realtime import sec_since_boot
 from selfdrive.controls.lib.radar_helpers import _LEAD_ACCEL_TAU
-#from selfdrive.controls.lib.longitudinal_mpc import libmpc_py
+from selfdrive.controls.lib.longitudinal_mpc import libmpc_py
 from selfdrive.kegman_conf import kegman_conf
 from selfdrive.debug.dataLogger import logData
 
@@ -75,8 +75,8 @@ LOG_MPC = os.environ.get('LOG_MPC', False)
 class LongitudinalMpc():
   def __init__(self, mpc_id):
     self.mpc_id = mpc_id
-    self.mpc_solution = [0] * 10
-    self.cur_state = [0] * 10
+    #self.mpc_solution = [0] * 10
+    #self.cur_state = [0] * 10
 
     self.setup_mpc()
     self.v_mpc = 0.0
@@ -125,6 +125,11 @@ class LongitudinalMpc():
     pm.send('liveLongitudinalMpc', dat)
 
   def setup_mpc(self):
+    ffi, self.libmpc = libmpc_py.get_libmpc(self.mpc_id)
+    #self.libmpc.init(MPC_COST_LONG.TTC, MPC_COST_LONG.DISTANCE, MPC_COST_LONG.ACCELERATION, MPC_COST_LONG.JERK)
+
+    self.mpc_solution = ffi.new("log_t *")
+    self.cur_state = ffi.new("state_t *")
     self.cur_state[0].v_ego = 0
     self.cur_state[0].a_ego = 0
     self.a_lead_tau = _LEAD_ACCEL_TAU
