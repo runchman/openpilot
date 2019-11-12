@@ -659,6 +659,8 @@ struct Plan {
   aTarget @18 :Float32;
   leadTurnoff @32 :Bool;
   gotCutoff @33 :Bool;
+  xLead @34 :Float32;
+  prevXLead @35 :Float32;
 
   vStart @26 :Float32;
   aStart @27 :Float32;

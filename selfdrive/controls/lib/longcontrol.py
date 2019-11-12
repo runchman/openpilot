@@ -29,9 +29,12 @@ def long_control_state_trans(long_plan, active, long_control_state, v_ego, v_tar
   """Update longitudinal control state machine"""
 
 
-  logData(["self.sm haslead",long_plan.hasLead])
-  logData(["self.sm leadTurnoff",long_plan.leadTurnoff])
-  logData(["self.sm gotCutoff",long_plan.gotCutoff])
+  logData(["haslead",long_plan.hasLead])
+  logData(["leadTurnoff",long_plan.leadTurnoff])
+  logData(["gotCutoff",long_plan.gotCutoff])
+  logData(["xLead",long_plan.xLead])
+  logData(["prevXLead",long_plan.prevXLead])
+  logData(["-----------------"])
   
 
   stopping_condition = (v_ego < 2.0 and cruise_standstill) or \
@@ -88,6 +91,7 @@ def long_control_state_trans(long_plan, active, long_control_state, v_ego, v_tar
     elif (long_control_state == LongCtrlState.startingWithLead):
       long_control_state = LongCtrlState.steadyState
 
+    # J.R. gonna have to differentiate between following and steady-state
     elif (long_control_state == LongCtrlState.following):
       long_control_state = LongCtrlState.steadyState
 
@@ -166,7 +170,7 @@ class LongControl():
       output_gb = 0.
 
     # tracking objects and driving
-    elif self.long_control_state == LongCtrlState.steadyState:
+    elif (self.long_control_state == LongCtrlState.steadyState or self.long_control_state == LongCtrlState.following):
       # J.R. changed to v_cruise because we want the pid loop to do all the work
       # NOTE: v_cruise is in kph
       self.v_pid = v_cruise*CV.KPH_TO_MS
