@@ -30,6 +30,8 @@ def long_control_state_trans(long_plan, active, long_control_state, v_ego, v_tar
 
 
   logData(["self.sm haslead",long_plan.hasLead])
+  logData(["self.sm leadTurnoff",long_plan.leadTurnoff])
+  logData(["self.sm gotCutoff",long_plan.gotCutoff])
   
 
   stopping_condition = (v_ego < 2.0 and cruise_standstill) or \
@@ -59,14 +61,14 @@ def long_control_state_trans(long_plan, active, long_control_state, v_ego, v_tar
     # force to steadyState for now
     # J.R. change this to be event focused rather than prior state focused?
     # if last_plan_event != none:
-    #   if event == gotCutoff:
+    #   if last_plan_event == gotCutoff:
     #      long_control_state = LongCtrlState.following
-    #   if event == leadTurnoff:
+    #   if last_plan_event == leadTurnoff:
     #      long_control_state = LongCtrlState.startingNoLead
-    #   if event == leadStopped:
+    #   if last_plan_event == leadStopped:
     #      long_control_state = LongCtrlState.stopped
-    #   if event == overTakingFarLead:
-    #   if event == leadPulledAway:
+    #   if last_plan_event == overTakingFarLead:
+    #   if last_plan_event == leadPulledAway:
     #      long_control_state = LongCtrlState.startingNoLead
     #
     #
