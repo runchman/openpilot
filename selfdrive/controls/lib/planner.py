@@ -176,7 +176,7 @@ class Planner():
       # cruise speed can't be negative even if user is distracted
       # self.v_cruise = max(self.v_cruise, 0.)
     else:
-      starting = long_control_state == LongCtrlState.starting
+      starting = (long_control_state == LongCtrlState.startingNoLead or long_control_state == LongCtrlState.startingWithLead)
       a_ego = min(sm['carState'].aEgo, 0.0)
       reset_speed = MIN_CAN_SPEED if starting else v_ego
       reset_accel = self.CP.startAccel if starting else a_ego
