@@ -14,6 +14,9 @@ from selfdrive.debug.dataLogger import logData
 #lead appears < this distance in meters, then this is a cutoff
 CUTOFF_DISTANCE = 5.0
 
+#lead disappears from within this, then it's a turnoff
+TURNOFF_DISTANCE = 3.0
+
 # One, two and three bar distances (in s)
 kegman = kegman_conf()
 if "ONE_BAR_DISTANCE" in kegman.conf:
@@ -166,6 +169,9 @@ class LongitudinalMpc():
       self.cur_state[0].x_l = x_lead
       self.cur_state[0].v_l = v_lead
     else:
+      self.leadTurnoff = False
+      if (self.prev_lead_status and self.prev_lead_x < TURNOFF_DISTANCE):
+        self.leadTurnoff = True
       self.prev_lead_status = False
       self.cutoff = False
       # Fake a fast lead car, so mpc keeps running
