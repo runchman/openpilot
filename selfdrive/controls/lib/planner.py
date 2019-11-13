@@ -14,6 +14,7 @@ from selfdrive.controls.lib.longcontrol import LongCtrlState, MIN_CAN_SPEED
 from selfdrive.controls.lib.fcw import FCWChecker
 from selfdrive.controls.lib.long_mpc import LongitudinalMpc
 from selfdrive.kegman_conf import kegman_conf
+from selfdrive.debug.dataLogger import logData
 
 
 MAX_SPEED = 255.0
