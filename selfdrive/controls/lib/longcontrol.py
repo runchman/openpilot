@@ -32,7 +32,6 @@ def long_control_state_trans(long_plan, active, long_control_state, v_ego, v_tar
   logData(["haslead",long_plan.hasLead])
   logData(["leadTurnoff",long_plan.leadTurnoff])
   logData(["gotCutoff",long_plan.gotCutoff])
-  logData(["xLead",long_plan.xLead])
   logData(["prevXLead",long_plan.prevXLead])
   logData(["-----------------"])
   

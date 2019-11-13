@@ -236,7 +236,6 @@ class Planner():
     plan_send.plan.hasLead = self.mpc1.prev_lead_status
     plan_send.plan.leadTurnoff = self.mpc1.leadTurnoff
     plan_send.plan.gotCutoff = self.mpc1.cutoff
-    plan_send.plan.xLead = self.mpc1.x_lead
     plan_send.plan.prevXLead = self.mpc1.prev_lead_x
     plan_send.plan.longitudinalPlanSource = self.longitudinalPlanSource
 
