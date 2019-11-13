@@ -190,6 +190,8 @@ class Planner():
     self.mpc1.set_cur_state(self.v_acc_start, self.a_acc_start)
     #self.mpc2.set_cur_state(self.v_acc_start, self.a_acc_start)
 
+    if lead_1 is not None:
+      logData(["planner calling mpc update lead_1.dRel",lead_1.dRel])
     self.mpc1.update(pm, sm['carState'], lead_1, v_cruise_setpoint)
     #self.mpc2.update(pm, sm['carState'], lead_2, v_cruise_setpoint)
 
