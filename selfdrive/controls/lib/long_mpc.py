@@ -161,6 +161,7 @@ class LongitudinalMpc():
       if not self.prev_lead_status or abs(x_lead - self.prev_lead_x) > 2.5:
         self.new_lead = True
 
+      self.cutoff = False
       if (self.new_lead and x_lead < CUTOFF_DISTANCE):
         self.cutoff = True
 
@@ -170,6 +171,7 @@ class LongitudinalMpc():
       self.cur_state[0].v_l = v_lead
     else:
       self.leadTurnoff = False
+      self.cutoff = False
       if (self.prev_lead_status and self.prev_lead_x < TURNOFF_DISTANCE):
         self.leadTurnoff = True
       self.prev_lead_status = False
@@ -264,20 +266,20 @@ class LongitudinalMpc():
     self.v_mpc_future = self.mpc_solution[0].v_ego[10]
 
     # Reset if NaN or goes through lead car
-    crashing = any(lead - ego < -50 for (lead, ego) in zip(self.mpc_solution[0].x_l, self.mpc_solution[0].x_ego))
-    nans = any(math.isnan(x) for x in self.mpc_solution[0].v_ego)
-    backwards = min(self.mpc_solution[0].v_ego) < -0.01
+    #crashing = any(lead - ego < -50 for (lead, ego) in zip(self.mpc_solution[0].x_l, self.mpc_solution[0].x_ego))
+    #nans = any(math.isnan(x) for x in self.mpc_solution[0].v_ego)
+    #backwards = min(self.mpc_solution[0].v_ego) < -0.01
 
-    if ((backwards or crashing) and self.prev_lead_status) or nans:
-      if t > self.last_cloudlog_t + 5.0:
-        self.last_cloudlog_t = t
-        cloudlog.warning("Longitudinal mpc %d reset - backwards: %s crashing: %s nan: %s" % (
-                          self.mpc_id, backwards, crashing, nans))
+    #if ((backwards or crashing) and self.prev_lead_status) or nans:
+    #  if t > self.last_cloudlog_t + 5.0:
+    #    self.last_cloudlog_t = t
+    #    cloudlog.warning("Longitudinal mpc %d reset - backwards: %s crashing: %s nan: %s" % (
+    #                      self.mpc_id, backwards, crashing, nans))
 
       #self.libmpc.init(MPC_COST_LONG.TTC, MPC_COST_LONG.DISTANCE,
       #                 MPC_COST_LONG.ACCELERATION, MPC_COST_LONG.JERK)
-      self.cur_state[0].v_ego = v_ego
-      self.cur_state[0].a_ego = 0.0
-      self.v_mpc = v_ego
-      self.a_mpc = CS.aEgo
-      self.prev_lead_status = False
+    #  self.cur_state[0].v_ego = v_ego
+    #  self.cur_state[0].a_ego = 0.0
+    #  self.v_mpc = v_ego
+    #  self.a_mpc = CS.aEgo
+    #  self.prev_lead_status = False

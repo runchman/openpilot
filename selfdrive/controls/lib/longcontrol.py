@@ -158,7 +158,7 @@ class LongControl():
                                                        v_target_future, self.v_pid, output_gb,
                                                        brake_pressed, cruise_standstill)
     # just a test see if I can pass an alert
-    if (self.long_control_state != last_state):
+    if (self.long_control_state != last_state and self.long_control_state != LongCtrlState.off):
       self.am.add(frame,"promptDriverDistracted")
 
     v_ego_pid = max(v_ego, MIN_CAN_SPEED)  # Without this we get jumps, CAN bus reports 0 when speed < 0.3
