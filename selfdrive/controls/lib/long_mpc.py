@@ -153,9 +153,9 @@ class LongitudinalMpc():
       x_lead = max(0, lead.dRel)  
       v_lead = max(0.0, lead.vLead)
       a_lead = lead.aLeadK
-      logData(["mpc x_lead",x_lead])
-      logData(["mpc v_lead",v_lead])
-      logData(["mpc a_lead",a_lead])
+      #logData(["mpc x_lead",x_lead])
+      #logData(["mpc v_lead",v_lead])
+      #logData(["mpc a_lead",a_lead])
 
       if (v_lead < 0.1 or -a_lead / 2.0 > v_lead):
         v_lead = 0.0

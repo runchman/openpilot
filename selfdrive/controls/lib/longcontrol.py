@@ -28,14 +28,6 @@ def long_control_state_trans(long_plan, active, long_control_state, v_ego, v_tar
                              output_gb, brake_pressed, cruise_standstill):
   """Update longitudinal control state machine"""
 
-
-  logData(["haslead",long_plan.hasLead])
-  logData(["leadTurnoff",long_plan.leadTurnoff])
-  logData(["gotCutoff",long_plan.gotCutoff])
-  logData(["prevXLead",long_plan.prevXLead])
-  logData(["-----------------"])
-  
-
   stopping_condition = (v_ego < 2.0 and cruise_standstill) or \
                        (v_ego < STOPPING_EGO_SPEED and \
                         ((v_pid < STOPPING_TARGET_SPEED and v_target < STOPPING_TARGET_SPEED) or
@@ -76,6 +68,12 @@ def long_control_state_trans(long_plan, active, long_control_state, v_ego, v_tar
     #
     #
     #
+    logData(["haslead",long_plan.hasLead])
+    logData(["leadTurnoff",long_plan.leadTurnoff])
+    logData(["gotCutoff",long_plan.gotCutoff])
+    logData(["prevXLead",long_plan.prevXLead])
+    logData(["state",long_control_state])
+    logData(["-----------------"])
     long_control_state = LongCtrlState.steadyState
 
     if (long_control_state == LongCtrlState.off):
