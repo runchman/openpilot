@@ -8,6 +8,8 @@ from selfdrive.config import Conversions as CV
 kegman = kegman_conf()
 LongCtrlState = log.ControlsState.LongControlState
 
+STOPPED_SPEED = .001
+
 STOPPING_EGO_SPEED = 0.5
 MIN_CAN_SPEED = 0.3  # TODO: parametrize this in car interface
 STOPPING_TARGET_SPEED = MIN_CAN_SPEED + 0.01
@@ -33,73 +35,63 @@ def long_control_state_trans(long_plan, active, long_control_state, v_ego, v_tar
                         ((v_pid < STOPPING_TARGET_SPEED and v_target < STOPPING_TARGET_SPEED) or
                         brake_pressed))
 
+  stopped_condition = (v_ego < STOPPED_SPEED)
+
   starting_condition = v_target > STARTING_TARGET_SPEED and not cruise_standstill
+
 
   # for now we are just working on the steady-state cruising state
   if not active:
     long_control_state = LongCtrlState.off
   else:
-    # enum LongControlState {
-      # off @0;
-      # pidDEPRECATED @1;
-      # stopping @2;
-      # startingDEPRECATED @3;
-      # startingNoLead @4;
-      # startingWithLead @5;
-      # following @6;
-      # slowing @7;
-      # coasting @8;
-      # stopped @9;
-      # steadyState @10;
-    # }
-    # force to steadyState for now
-    # J.R. change this to be event focused rather than prior state focused?
-    # if last_plan_event != none:
-    #   if last_plan_event == gotCutoff:
-    #      long_control_state = LongCtrlState.following
-    #   if last_plan_event == leadTurnoff:
-    #      long_control_state = LongCtrlState.startingNoLead
-    #   if last_plan_event == leadStopped:
-    #      long_control_state = LongCtrlState.stopped
-    #   if last_plan_event == overTakingFarLead:
-    #   if last_plan_event == leadPulledAway:
-    #      long_control_state = LongCtrlState.startingNoLead
-    #
-    #
-    #
-    #
     logData(["haslead",long_plan.hasLead])
     logData(["leadTurnoff",long_plan.leadTurnoff])
     logData(["gotCutoff",long_plan.gotCutoff])
     logData(["prevXLead",long_plan.prevXLead])
     logData(["state",long_control_state])
     logData(["-----------------"])
-    long_control_state = LongCtrlState.steadyState
+
+    if (stopping_condition and stopped_condition):
+      long_control_state = LongCtrlState.stopped
+      return long_control_state
+
+    if (stopping_condition and not stopped_condition):
+      long_control_state = LongCtrlState.stopping
+      return long_control_state
+
+    if (starting_condition and long_plan.hasLead):
+      long_control_state = LongCtrlState.startingWithLead
+      return long_control_state
+
+    if (starting_condition and not long_plan.hasLead):
+      long_control_state = LongCtrlState.startingNoLead
+      return long_control_state
+
+    #long_control_state = LongCtrlState.steadyState
 
     if (long_control_state == LongCtrlState.off):
-      long_control_state = LongCtrlState.steadyState
+      long_control_state = LongCtrlState.off # no change
 
-    elif (long_control_state == LongCtrlState.stopping):
-      long_control_state = LongCtrlState.steadyState
-
-    elif (long_control_state == LongCtrlState.startingNoLead):
-      long_control_state = LongCtrlState.steadyState
-
-    elif (long_control_state == LongCtrlState.startingWithLead):
-      long_control_state = LongCtrlState.steadyState
-
-    # J.R. gonna have to differentiate between following and steady-state
     elif (long_control_state == LongCtrlState.following):
+      # goal is to fluctuate around desired react time, setting a
+      # target speed (below our real target) that maintains this time.
+      # a. lead pulls away -> bump up target speed -> following
+      # b. lead gets closer -> bump down target speed -> coast
+      # c. gaining too fast / getting too close -> slow
       long_control_state = LongCtrlState.steadyState
 
     elif (long_control_state == LongCtrlState.slowing):
-      long_control_state = LongCtrlState.steadyState
+      # here we are actively needing to brake. PID loop goal is to control decel
+      # in a manner that is comfortable for the driver - achieve max decel well 
+      # before the stopping point, then gradually ease up as we come upon the car.
+      long_control_state = LongCtrlState.slowing
 
     elif (long_control_state == LongCtrlState.coasting):
-      long_control_state = LongCtrlState.steadyState
-
-    elif (long_control_state == LongCtrlState.stopped):
-      long_control_state = LongCtrlState.stopped
+      # J.R. determine following time
+      long_control_state = LongCtrlState.coasting
+      # if (no lead) -> steadyState
+      # if (lead && within follow window) -> keep coasting
+      # if (lead && vRel < 0) -> following
 
     elif (long_control_state == LongCtrlState.steadyState):
       if (long_plan.hasLead or long_plan.gotCutoff):
@@ -155,6 +147,11 @@ class LongControl():
     self.long_control_state = long_control_state_trans(self.sm['plan'], active, self.long_control_state, v_ego,
                                                        v_target_future, self.v_pid, output_gb,
                                                        brake_pressed, cruise_standstill)
+
+    # based on potentially new state, choose our pid parameters
+    #if (self.long_control_state != last_state and self.long_control_state != LongCtrlState.off):
+    #  choosePidParams(last_state,self.long_control_state)
+
     # just a test see if I can pass an alert
     if (self.long_control_state != last_state and self.long_control_state != LongCtrlState.off):
       self.am.add(frame,"promptDriverDistracted")
@@ -210,7 +207,7 @@ class LongControl():
 
     # Intention is to move again, release brake fast before handing control to PID
     # J.R. or startingNoLead
-    elif self.long_control_state == LongCtrlState.startingWithLead:
+    elif self.long_control_state == LongCtrlState.startingWithLead or self.long_control_state == LongCtrlState.startingNoLead:
       if output_gb < -0.2:
         output_gb += STARTING_BRAKE_RATE / RATE
       self.v_pid = v_ego
