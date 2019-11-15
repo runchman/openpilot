@@ -86,7 +86,7 @@ def long_control_state_trans(long_plan, active, long_control_state, v_ego, v_tar
       if output_gb >= -BRAKE_THRESHOLD_TO_PID:
         long_control_state = LongCtrlState.steadyState
 
-    elif (long_control_state == LongCtrlState.following):
+    #elif (long_control_state == LongCtrlState.following):
       # goal is to fluctuate around desired react time, setting a
       # target speed (below our real target) that maintains this time.
       # a. lead pulls away -> bump up target speed -> following
