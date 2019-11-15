@@ -70,7 +70,9 @@ def long_control_state_trans(long_plan, active, long_control_state, v_ego, v_tar
     #long_control_state = LongCtrlState.steadyState
 
     if (long_control_state == LongCtrlState.off):
-      long_control_state = LongCtrlState.off # no change
+      # we've switched to active, in reality here do we need to
+      # determine if we are in a starting condition? Not sure
+      long_control_state = LongCtrlState.steadyState 
 
     elif (long_control_state == LongCtrlState.following):
       # goal is to fluctuate around desired react time, setting a
