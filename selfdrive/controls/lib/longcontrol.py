@@ -51,7 +51,7 @@ def long_control_state_trans(long_plan, active, long_control_state, v_ego, v_tar
     logData(["state",long_control_state])
     logData(["-----------------"])
 
-    if (long_control_state == longCtrlState.stopped):
+    if (long_control_state == LongCtrlState.stopped):
       if (starting_condition and long_plan.hasLead):
         long_control_state = LongCtrlState.startingWithLead
         return long_control_state
