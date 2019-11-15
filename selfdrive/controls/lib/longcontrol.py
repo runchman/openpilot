@@ -60,13 +60,13 @@ def long_control_state_trans(long_plan, active, long_control_state, v_ego, v_tar
         long_control_state = LongCtrlState.startingNoLead
         return long_control_state
 
-    if (stopping_condition and stopped_condition):
-      long_control_state = LongCtrlState.stopped
-      return long_control_state
+    #if (stopping_condition and stopped_condition):
+    #  long_control_state = LongCtrlState.stopped
+    #  return long_control_state
 
-    if (stopping_condition and not stopped_condition):
-      long_control_state = LongCtrlState.stopping
-      return long_control_state
+    #if (stopping_condition and not stopped_condition):
+    #  long_control_state = LongCtrlState.stopping
+    #  return long_control_state
 
     if (long_control_state == LongCtrlState.off):
       if (starting_condition and long_plan.hasLead):
@@ -92,7 +92,7 @@ def long_control_state_trans(long_plan, active, long_control_state, v_ego, v_tar
       # a. lead pulls away -> bump up target speed -> following
       # b. lead gets closer -> bump down target speed -> coast
       # c. gaining too fast / getting too close -> slow
-      long_control_state = LongCtrlState.steadyState
+      #long_control_state = LongCtrlState.steadyState
 
     elif (long_control_state == LongCtrlState.slowing):
       # here we are actively needing to brake. PID loop goal is to control decel
