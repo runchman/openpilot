@@ -51,6 +51,15 @@ def long_control_state_trans(long_plan, active, long_control_state, v_ego, v_tar
     logData(["state",long_control_state])
     logData(["-----------------"])
 
+    if (long_control_state == longCtrlState.stopped):
+      if (starting_condition and long_plan.hasLead):
+        long_control_state = LongCtrlState.startingWithLead
+        return long_control_state
+
+      if (starting_condition and not long_plan.hasLead):
+        long_control_state = LongCtrlState.startingNoLead
+        return long_control_state
+
     if (stopping_condition and stopped_condition):
       long_control_state = LongCtrlState.stopped
       return long_control_state
@@ -59,25 +68,14 @@ def long_control_state_trans(long_plan, active, long_control_state, v_ego, v_tar
       long_control_state = LongCtrlState.stopping
       return long_control_state
 
-    if (starting_condition and long_plan.hasLead):
-      long_control_state = LongCtrlState.startingWithLead
-      return long_control_state
-
-    if (starting_condition and not long_plan.hasLead):
-      long_control_state = LongCtrlState.startingNoLead
-      return long_control_state
-
-    #long_control_state = LongCtrlState.steadyState
-
-    # elif long_control_state == LongCtrlState.starting:
-    #   if stopping_condition:
-    #     long_control_state = LongCtrlState.stopping
-    #   elif output_gb >= -BRAKE_THRESHOLD_TO_PID:
-    #     long_control_state = LongCtrlState.pi
-
     if (long_control_state == LongCtrlState.off):
-      # we've switched to active, in reality here do we need to
-      # determine if we are in a starting condition? Not sure
+      if (starting_condition and long_plan.hasLead):
+        long_control_state = LongCtrlState.startingWithLead
+        return long_control_state
+      if (starting_condition and not long_plan.hasLead):
+        long_control_state = LongCtrlState.startingNoLead
+        return long_control_state
+
       long_control_state = LongCtrlState.steadyState 
 
     elif (long_control_state == LongCtrlState.startingWithLead):
