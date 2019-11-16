@@ -9,3 +9,7 @@ def logPid(pid_name,kp,ki,kf,set_point,measured,p,i,f,control):
     fil.write("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t{8}\t{9}".\
       format(pid_name,kp,ki,kf,set_point,measured,p,i,f,control))
     fil.write("\n")
+
+def clearLogs():
+  open('/data/datalog.txt','w').close()
+  open('/data/pidlog.txt','w').close()
