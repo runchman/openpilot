@@ -33,7 +33,12 @@ def long_control_state_trans(sm, active, long_control_state, v_ego, v_target, v_
 
   long_plan = sm['plan']
 
-  vRel = sm['radarState'].leadOne.vRel
+  radar_state = sm.get('radarState',None)
+
+  if radar_state is not None:
+    vRel = sm['radarState'].leadOne.vRel
+  else:
+    vRel = 0
 
   stopping_condition = (v_ego < 2.0 and cruise_standstill) or \
                        (v_ego < STOPPING_EGO_SPEED and \
