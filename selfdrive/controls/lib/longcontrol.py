@@ -8,6 +8,7 @@ from selfdrive.config import Conversions as CV
 kegman = kegman_conf()
 LongCtrlState = log.ControlsState.LongControlState
 
+TARGET_REACT_TIME = 1.2   # seconds following goal
 STOPPED_SPEED = .001
 
 STOPPING_EGO_SPEED = 0.5
@@ -39,6 +40,10 @@ def long_control_state_trans(long_plan, active, long_control_state, v_ego, v_tar
 
   starting_condition = v_target > STARTING_TARGET_SPEED and not cruise_standstill
 
+  # assume we are golden unless there is a target
+  react_time = TARGET_REACT_TIME
+  if (long_plan.hasLead):
+    react_time = long_plan.prevXLead / v_ego
 
   # for now we are just working on the steady-state cruising state
   if not active:
@@ -101,17 +106,28 @@ def long_control_state_trans(long_plan, active, long_control_state, v_ego, v_tar
       long_control_state = LongCtrlState.slowing
 
     elif (long_control_state == LongCtrlState.coasting):
-      # J.R. determine following time
-      long_control_state = LongCtrlState.coasting
+      if (react_time < (.6 * TARGET_REACT_TIME):
+        long_control_state = LongCtrlState.slowing
       # if (no lead) -> steadyState
       # if (lead && within follow window) -> keep coasting
       # if (lead && vRel < 0) -> following
 
     elif (long_control_state == LongCtrlState.steadyState):
-      if (long_plan.hasLead or long_plan.gotCutoff):
-        long_control_state = LongCtrlState.following
-      if (long_plan.leadTurnoff):
-        long_control_state = LongCtrlState.startingNoLead
+      # technically steadyState shouldn't have a target but we'll 
+      # toss this in there anyway
+      if (react_time < (.8 * TARGET_REACT_TIME):
+        long_control_state = LongCtrlState.coasting
+      if (react_time < (.6 * TARGET_REACT_TIME):
+        long_control_state = LongCtrlState.slowing
+      #if (long_plan.hasLead or long_plan.gotCutoff):
+      #  long_control_state = LongCtrlState.following
+      #if (long_plan.leadTurnoff):
+      #  long_control_state = LongCtrlState.startingNoLead
+    elif (long_control_state == LongCtrlState.following):
+      if (react_time < (.8 * TARGET_REACT_TIME):
+        long_control_state = LongCtrlState.coasting
+      if (react_time < (.6 * TARGET_REACT_TIME):
+        long_control_state = LongCtrlState.slowing
 
   return long_control_state
 
@@ -170,17 +186,17 @@ class LongControl():
     if (self.long_control_state != last_state and self.long_control_state != LongCtrlState.off):
       if (self.long_control_state == LongCtrlState.steadyState):
         self.am.add(frame,"smooth")
-      if (self.long_control_state == LongCtrlState.startingNoLead):
+      elif (self.long_control_state == LongCtrlState.startingNoLead):
         self.am.add(frame,"gunit")
-      if (self.long_control_state == LongCtrlState.startingWithLead):
+      elif (self.long_control_state == LongCtrlState.startingWithLead):
         self.am.add(frame,"godude")
-      if (self.long_control_state == LongCtrlState.following):
+      elif (self.long_control_state == LongCtrlState.following):
         self.am.add(frame,"following")
-      if (self.long_control_state == LongCtrlState.slowing):
-        self.am.add(frame,"slowing")
-      if (self.long_control_state == LongCtrlState.coasting):
-        self.am.add(frame,"coasting")
-      if (self.long_control_state == LongCtrlState.stopped):
+      elif (self.long_control_state == LongCtrlState.slowing):
+        self.am.add(frame,"brakes")
+      elif (self.long_control_state == LongCtrlState.coasting):
+        self.am.add(frame,"coast")
+      elif (self.long_control_state == LongCtrlState.stopped):
         self.am.add(frame,"stopped")
 
     v_ego_pid = max(v_ego, MIN_CAN_SPEED)  # Without this we get jumps, CAN bus reports 0 when speed < 0.3

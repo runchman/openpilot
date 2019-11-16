@@ -12,10 +12,10 @@ from selfdrive.debug.dataLogger import logData
 
 
 #lead appears < this distance in meters, then this is a cutoff
-CUTOFF_DISTANCE = 5.0
+CUTOFF_DISTANCE = 15.0
 
 #lead disappears from within this, then it's a turnoff
-TURNOFF_DISTANCE = 3.0
+TURNOFF_DISTANCE = 10.0
 
 # One, two and three bar distances (in s)
 kegman = kegman_conf()
