@@ -7,7 +7,6 @@ import signal
 import subprocess
 import datetime
 from common.spinner import Spinner
-from selfdrive.debug.dataLogger import clearLogs
 
 from common.basedir import BASEDIR
 sys.path.append(os.path.join(BASEDIR, "pyextra"))
@@ -323,8 +322,6 @@ def manager_thread():
 
   cloudlog.info("manager start")
   cloudlog.info({"environ": os.environ})
-
-  clearLogs()
 
   # save boot log
   subprocess.call(["./loggerd", "--bootlog"], cwd=os.path.join(BASEDIR, "selfdrive/loggerd"))
