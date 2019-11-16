@@ -33,9 +33,7 @@ def long_control_state_trans(sm, active, long_control_state, v_ego, v_target, v_
 
   long_plan = sm['plan']
 
-  radar_state = sm.get('radarState',None)
-
-  if radar_state is not None:
+  if sm.all_alive_and_valid(service_list=['radarState']):
     vRel = sm['radarState'].leadOne.vRel
   else:
     vRel = 0
