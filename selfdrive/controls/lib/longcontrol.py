@@ -42,7 +42,7 @@ def long_control_state_trans(long_plan, active, long_control_state, v_ego, v_tar
 
   # assume we are golden unless there is a target
   react_time = TARGET_REACT_TIME
-  if (long_plan.hasLead):
+  if (long_plan.hasLead and v_ego > 0.2):
     react_time = long_plan.prevXLead / v_ego
 
   # for now we are just working on the steady-state cruising state
