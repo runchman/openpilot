@@ -27,9 +27,13 @@ _MAX_SPEED_ERROR_V = [1.5, 1.5]  # max positive v_pid error VS actual speed; thi
 RATE = 100.0
 
 
-def long_control_state_trans(long_plan, active, long_control_state, v_ego, v_target, v_pid,
+def long_control_state_trans(sm, active, long_control_state, v_ego, v_target, v_pid,
                              output_gb, brake_pressed, cruise_standstill):
   """Update longitudinal control state machine"""
+
+  long_plan = sm['plan']
+
+  vRel = sm['radarState'].leadOne.vRel
 
   stopping_condition = (v_ego < 2.0 and cruise_standstill) or \
                        (v_ego < STOPPING_EGO_SPEED and \
@@ -103,14 +107,19 @@ def long_control_state_trans(long_plan, active, long_control_state, v_ego, v_tar
       # here we are actively needing to brake. PID loop goal is to control decel
       # in a manner that is comfortable for the driver - achieve max decel well 
       # before the stopping point, then gradually ease up as we come upon the car.
-      long_control_state = LongCtrlState.slowing
+      if (not long_plan.hasLead):
+        long_control_state = LongCtrlState.steadyState
+      # J.R. look at this value
+      if (long_plan.leadTurnoff and v_ego < 2.5):
+        long_control_state = LongCtrlState.startingNoLead
 
     elif (long_control_state == LongCtrlState.coasting):
-      if (react_time < (.6 * TARGET_REACT_TIME)):
+      if (long_plan.hasLead and react_time < (.6 * TARGET_REACT_TIME)):
         long_control_state = LongCtrlState.slowing
-      # if (no lead) -> steadyState
-      # if (lead && within follow window) -> keep coasting
-      # if (lead && vRel < 0) -> following
+      elif (long_plan.hasLead and vRel > 0 and react_time > (.8 * TARGET_REACT_TIME)):
+        long_control_state = LongCtrlState.following
+      elif (not long_plan.hasLead):
+        long_control_state = LongCtrlState.steadyState
 
     elif (long_control_state == LongCtrlState.steadyState):
       # technically steadyState shouldn't have a target but we'll 
@@ -119,10 +128,11 @@ def long_control_state_trans(long_plan, active, long_control_state, v_ego, v_tar
         long_control_state = LongCtrlState.coasting
       if (react_time < (.6 * TARGET_REACT_TIME)):
         long_control_state = LongCtrlState.slowing
-      #if (long_plan.hasLead or long_plan.gotCutoff):
-      #  long_control_state = LongCtrlState.following
-      #if (long_plan.leadTurnoff):
-      #  long_control_state = LongCtrlState.startingNoLead
+      if (long_plan.gotCutoff):
+        long_control_state = LongCtrlState.following
+      elif (long_plan.leadTurnoff):
+        long_control_state = LongCtrlState.startingNoLead
+
     elif (long_control_state == LongCtrlState.following):
       if (react_time < (.8 * TARGET_REACT_TIME)):
         long_control_state = LongCtrlState.coasting
@@ -174,7 +184,7 @@ class LongControl():
     # Update state machine
     output_gb = self.last_output_gb
     last_state = self.long_control_state
-    self.long_control_state = long_control_state_trans(self.sm['plan'], active, self.long_control_state, v_ego,
+    self.long_control_state = long_control_state_trans(self.sm, active, self.long_control_state, v_ego,
                                                        v_target_future, self.v_pid, output_gb,
                                                        brake_pressed, cruise_standstill)
 
