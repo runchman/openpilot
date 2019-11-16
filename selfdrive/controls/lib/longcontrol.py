@@ -106,7 +106,7 @@ def long_control_state_trans(long_plan, active, long_control_state, v_ego, v_tar
       long_control_state = LongCtrlState.slowing
 
     elif (long_control_state == LongCtrlState.coasting):
-      if (react_time < (.6 * TARGET_REACT_TIME):
+      if (react_time < (.6 * TARGET_REACT_TIME)):
         long_control_state = LongCtrlState.slowing
       # if (no lead) -> steadyState
       # if (lead && within follow window) -> keep coasting
@@ -115,18 +115,18 @@ def long_control_state_trans(long_plan, active, long_control_state, v_ego, v_tar
     elif (long_control_state == LongCtrlState.steadyState):
       # technically steadyState shouldn't have a target but we'll 
       # toss this in there anyway
-      if (react_time < (.8 * TARGET_REACT_TIME):
+      if (react_time < (.8 * TARGET_REACT_TIME)):
         long_control_state = LongCtrlState.coasting
-      if (react_time < (.6 * TARGET_REACT_TIME):
+      if (react_time < (.6 * TARGET_REACT_TIME)):
         long_control_state = LongCtrlState.slowing
       #if (long_plan.hasLead or long_plan.gotCutoff):
       #  long_control_state = LongCtrlState.following
       #if (long_plan.leadTurnoff):
       #  long_control_state = LongCtrlState.startingNoLead
     elif (long_control_state == LongCtrlState.following):
-      if (react_time < (.8 * TARGET_REACT_TIME):
+      if (react_time < (.8 * TARGET_REACT_TIME)):
         long_control_state = LongCtrlState.coasting
-      if (react_time < (.6 * TARGET_REACT_TIME):
+      if (react_time < (.6 * TARGET_REACT_TIME)):
         long_control_state = LongCtrlState.slowing
 
   return long_control_state
