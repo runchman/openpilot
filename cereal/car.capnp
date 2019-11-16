@@ -305,6 +305,14 @@ struct CarControl {
       chimeWarning2 @5;
       chimeWarningRepeat @6;
       chimePrompt @7;
+      chimeBrakes @8;
+      chimeCoast @9;
+      chimeCutoff @10;
+      chimeFollowing @11;
+      chimeGodude @12;
+      chimeGunit @13;
+      chimeSmooth @14;
+      chimeStopped @15;
     }
   }
 }

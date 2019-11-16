@@ -60,6 +60,62 @@ class Alert():
 ALERTS = [
   # Miscellaneous alerts
   Alert(
+      "brakes",
+      "",
+      "",
+      AlertStatus.normal, AlertSize.none,
+      Priority.MID, VisualAlert.none, AudibleAlert.chimeBrakes, 1.0, 0., 0.),
+
+  Alert(
+      "coast",
+      "",
+      "",
+      AlertStatus.normal, AlertSize.none,
+      Priority.MID, VisualAlert.none, AudibleAlert.chimeCoast, 1.0, 0., 0.),
+
+  Alert(
+      "cutoff",
+      "",
+      "",
+      AlertStatus.normal, AlertSize.none,
+      Priority.MID, VisualAlert.none, AudibleAlert.chimeCutoff, 1.25, 0., 0.),
+
+  Alert(
+      "following",
+      "",
+      "",
+      AlertStatus.normal, AlertSize.none,
+      Priority.MID, VisualAlert.none, AudibleAlert.chimeFollowing, 1.0, 0., 0.),
+
+  Alert(
+      "godude",
+      "",
+      "",
+      AlertStatus.normal, AlertSize.none,
+      Priority.MID, VisualAlert.none, AudibleAlert.chimeGodude, 1.25, 0., 0.),
+
+  Alert(
+      "gunit",
+      "",
+      "",
+      AlertStatus.normal, AlertSize.none,
+      Priority.MID, VisualAlert.none, AudibleAlert.chimeGunit, 1.0, 0., 0.),
+
+  Alert(
+      "smooth",
+      "",
+      "",
+      AlertStatus.normal, AlertSize.none,
+      Priority.MID, VisualAlert.none, AudibleAlert.chimeSmooth, 1.55, 0., 0.),
+
+  Alert(
+      "stopped",
+      "",
+      "",
+      AlertStatus.normal, AlertSize.none,
+      Priority.MID, VisualAlert.none, AudibleAlert.chimeStopped, 1.0, 0., 0.),
+
+  Alert(
       "enable",
       "",
       "",

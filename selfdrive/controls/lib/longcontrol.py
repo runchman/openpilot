@@ -166,9 +166,22 @@ class LongControl():
     #if (self.long_control_state != last_state and self.long_control_state != LongCtrlState.off):
     #  choosePidParams(last_state,self.long_control_state)
 
-    # just a test see if I can pass an alert
+    # alert on state change
     if (self.long_control_state != last_state and self.long_control_state != LongCtrlState.off):
-      self.am.add(frame,"promptDriverDistracted")
+      if (self.long_control_state == LongCtrlState.steadyState):
+        self.am.add(frame,"smooth")
+      if (self.long_control_state == LongCtrlState.startingNoLead):
+        self.am.add(frame,"gunit")
+      if (self.long_control_state == LongCtrlState.startingWithLead):
+        self.am.add(frame,"godude")
+      if (self.long_control_state == LongCtrlState.following):
+        self.am.add(frame,"following")
+      if (self.long_control_state == LongCtrlState.slowing):
+        self.am.add(frame,"slowing")
+      if (self.long_control_state == LongCtrlState.coasting):
+        self.am.add(frame,"coasting")
+      if (self.long_control_state == LongCtrlState.stopped):
+        self.am.add(frame,"stopped")
 
     v_ego_pid = max(v_ego, MIN_CAN_SPEED)  # Without this we get jumps, CAN bus reports 0 when speed < 0.3
 
@@ -218,6 +231,13 @@ class LongControl():
 
       self.v_pid = v_ego
       self.pid.reset()
+
+    elif self.long_control_state == LongCtrlState.coasting:
+      output_gb = 0.0
+
+    elif self.long_control_state == LongCtrlState.slowing:
+      # here we'd update the braking pid
+      output_gb = 0.0
 
     # Intention is to move again, release brake fast before handing control to PID
     # J.R. or startingNoLead
