@@ -660,7 +660,7 @@ struct Plan {
   leadTurnoff @32 :Bool;
   gotCutoff @33 :Bool;
   prevXLead @34 :Float32;
-  vRel @34 :Float32;
+  vRel @35 :Float32;
 
   vStart @26 :Float32;
   aStart @27 :Float32;
