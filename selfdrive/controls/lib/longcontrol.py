@@ -8,7 +8,7 @@ from selfdrive.config import Conversions as CV
 kegman = kegman_conf()
 LongCtrlState = log.ControlsState.LongControlState
 
-TARGET_REACT_TIME = 1.2   # seconds following goal
+TARGET_REACT_TIME = 2.0   # seconds following goal
 STOPPED_SPEED = .001
 
 STOPPING_EGO_SPEED = 0.5
