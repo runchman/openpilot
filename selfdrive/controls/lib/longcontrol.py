@@ -9,6 +9,8 @@ kegman = kegman_conf()
 LongCtrlState = log.ControlsState.LongControlState
 
 TARGET_REACT_TIME = 2.5   # seconds following goal
+FOLLOW_SPEED_BUMP = 2 * CV.MPH_TO_MS
+
 STOPPED_SPEED = .001
 
 STOPPING_EGO_SPEED = 0.5
@@ -28,7 +30,7 @@ RATE = 100.0
 
 
 def long_control_state_trans(sm, active, long_control_state, v_ego, v_target, v_pid,
-                             output_gb, brake_pressed, cruise_standstill):
+                             output_gb, brake_pressed, cruise_standstill, v_cruise):
   """Update longitudinal control state machine"""
 
   long_plan = sm['plan']
@@ -49,7 +51,6 @@ def long_control_state_trans(sm, active, long_control_state, v_ego, v_target, v_
   if (long_plan.hasLead and v_ego > 0.2):
     react_time = long_plan.prevXLead / v_ego
 
-  # for now we are just working on the steady-state cruising state
   if not active:
     long_control_state = LongCtrlState.off
   else:
@@ -127,7 +128,6 @@ def long_control_state_trans(sm, active, long_control_state, v_ego, v_target, v_
     elif (long_control_state == LongCtrlState.steadyState):
       # technically steadyState shouldn't have a target but we'll 
       # toss this in there anyway
-      self.
       if (react_time < (.8 * TARGET_REACT_TIME)):
         long_control_state = LongCtrlState.coasting
       if (react_time < (.6 * TARGET_REACT_TIME)):
@@ -190,9 +190,10 @@ class LongControl():
     last_state = self.long_control_state
     self.long_control_state = long_control_state_trans(self.sm, active, self.long_control_state, v_ego,
                                                        v_target_future, self.v_pid, output_gb,
-                                                       brake_pressed, cruise_standstill)
+                                                       brake_pressed, cruise_standstill, v_cruise)
 
-    # based on potentially new state, choose our pid parameters
+
+    # based on new state, choose our pid parameters
     #if (self.long_control_state != last_state and self.long_control_state != LongCtrlState.off):
     #  choosePidParams(last_state,self.long_control_state)
 
@@ -225,7 +226,6 @@ class LongControl():
       # J.R. changed to v_cruise because we want the pid loop to do all the work
       # NOTE: v_cruise is in kph
       self.v_pid = v_cruise*CV.KPH_TO_MS
-      self.v_target_present = self.v_pid
       self.pid.pos_limit = gas_max
       # set neg limit to zero to avoid braking while we are debugging
       self.pid.neg_limit = - brake_max
@@ -252,8 +252,12 @@ class LongControl():
 
     elif (self.long_control_state == LongCtrlState.following):
       # our present target is whatever is established due to our following reaction time
-      self.v_target_present = v_ego
-      self.v_pid = self.v_target_present
+      self.v_pid = v_ego
+      # if we've fallen behind by a certain amount, bump target speed up, but not above our
+      # current cruise setting
+      self.react_time = self.sm['plan'].prevXLead / v_ego
+      if (self.react_time > (1.1 * TARGET_REACT_TIME)):
+        self.v_pid = min(self.v_pid * (FOLLOW_SPEED_BUMP / RATE),v_cruise)
 
     # Intention is to stop, switch to a different brake control until we stop
     elif self.long_control_state == LongCtrlState.stopping:
