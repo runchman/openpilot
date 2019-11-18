@@ -8,7 +8,7 @@ from selfdrive.config import Conversions as CV
 kegman = kegman_conf()
 LongCtrlState = log.ControlsState.LongControlState
 
-TARGET_REACT_TIME = 2.0   # seconds following goal
+TARGET_REACT_TIME = 2.5   # seconds following goal
 STOPPED_SPEED = .001
 
 STOPPING_EGO_SPEED = 0.5
@@ -85,6 +85,7 @@ def long_control_state_trans(sm, active, long_control_state, v_ego, v_target, v_
         long_control_state = LongCtrlState.startingNoLead
         return long_control_state
 
+      # we just became active 
       long_control_state = LongCtrlState.steadyState 
 
     elif (long_control_state == LongCtrlState.startingWithLead):
@@ -112,11 +113,13 @@ def long_control_state_trans(sm, active, long_control_state, v_ego, v_target, v_
       # J.R. look at this value
       if (long_plan.leadTurnoff and v_ego < 2.5):
         long_control_state = LongCtrlState.startingNoLead
+      if (long_plan.hasLead and react_time > (1.0 * TARGET_REACT_TIME)):
+        long_control_state = LongCtrlState.following
 
     elif (long_control_state == LongCtrlState.coasting):
       if (long_plan.hasLead and react_time < (.6 * TARGET_REACT_TIME)):
         long_control_state = LongCtrlState.slowing
-      elif (long_plan.hasLead and vRel > 0 and react_time > (.8 * TARGET_REACT_TIME)):
+      elif (long_plan.hasLead and vRel > 0 and react_time > (1.0 * TARGET_REACT_TIME)):
         long_control_state = LongCtrlState.following
       elif (not long_plan.hasLead):
         long_control_state = LongCtrlState.steadyState
@@ -124,6 +127,7 @@ def long_control_state_trans(sm, active, long_control_state, v_ego, v_target, v_
     elif (long_control_state == LongCtrlState.steadyState):
       # technically steadyState shouldn't have a target but we'll 
       # toss this in there anyway
+      self.
       if (react_time < (.8 * TARGET_REACT_TIME)):
         long_control_state = LongCtrlState.coasting
       if (react_time < (.6 * TARGET_REACT_TIME)):
@@ -217,10 +221,11 @@ class LongControl():
       output_gb = 0.
 
     # tracking objects and driving
-    elif (self.long_control_state == LongCtrlState.steadyState or self.long_control_state == LongCtrlState.following):
+    elif (self.long_control_state == LongCtrlState.steadyState):
       # J.R. changed to v_cruise because we want the pid loop to do all the work
       # NOTE: v_cruise is in kph
       self.v_pid = v_cruise*CV.KPH_TO_MS
+      self.v_target_present = self.v_pid
       self.pid.pos_limit = gas_max
       # set neg limit to zero to avoid braking while we are debugging
       self.pid.neg_limit = - brake_max
@@ -238,12 +243,17 @@ class LongControl():
       logData([v_cruise,self.v_pid,v_ego_pid,output_gb])
 
       # output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, deadzone=deadzone, feedforward=a_target, freeze_integrator=prevent_overshoot)
-      # J.R. don't do any braking, just for testing. Actually here we are in steady-state cruising,
+     # J.R. don't do any braking, just for testing. Actually here we are in steady-state cruising,
       # so we wouldn't do any braking anyway.
       output_gb = clip(output_gb,0,gas_max)
 
       # if prevent_overshoot:
       #  output_gb = min(output_gb, 0.0)
+
+    elif (self.long_control_state == LongCtrlState.following):
+      # our present target is whatever is established due to our following reaction time
+      self.v_target_present = v_ego
+      self.v_pid = self.v_target_present
 
     # Intention is to stop, switch to a different brake control until we stop
     elif self.long_control_state == LongCtrlState.stopping:
