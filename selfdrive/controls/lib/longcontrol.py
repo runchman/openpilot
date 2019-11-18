@@ -79,12 +79,12 @@ def long_control_state_trans(sm, active, long_control_state, v_ego, v_target, v_
     #  return long_control_state
 
     if (long_control_state == LongCtrlState.off):
-      if (starting_condition and long_plan.hasLead):
-        long_control_state = LongCtrlState.startingWithLead
-        return long_control_state
-      if (starting_condition and not long_plan.hasLead):
-        long_control_state = LongCtrlState.startingNoLead
-        return long_control_state
+      #if (starting_condition and long_plan.hasLead):
+      #  long_control_state = LongCtrlState.startingWithLead
+      #  return long_control_state
+      #if (starting_condition and not long_plan.hasLead):
+      #  long_control_state = LongCtrlState.startingNoLead
+      #  return long_control_state
 
       # we just became active 
       long_control_state = LongCtrlState.steadyState 
@@ -111,6 +111,8 @@ def long_control_state_trans(sm, active, long_control_state, v_ego, v_target, v_
       # before the stopping point, then gradually ease up as we come upon the car.
       if (not long_plan.hasLead):
         long_control_state = LongCtrlState.steadyState
+        return long_control_state
+
       # J.R. look at this value
       if (long_plan.leadTurnoff and v_ego < 2.5):
         long_control_state = LongCtrlState.startingNoLead
@@ -258,6 +260,8 @@ class LongControl():
       self.react_time = self.sm['plan'].prevXLead / v_ego
       if (self.react_time > (1.1 * TARGET_REACT_TIME)):
         self.v_pid = min(self.v_pid * (FOLLOW_SPEED_BUMP / RATE),v_cruise)
+        output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, feedforward=0)
+        output_gb = clip(output_gb,0,gas_max)
 
     # Intention is to stop, switch to a different brake control until we stop
     elif self.long_control_state == LongCtrlState.stopping:
