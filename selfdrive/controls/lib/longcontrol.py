@@ -328,10 +328,13 @@ class LongControl():
     elif (self.long_control_state == LongCtrlState.following):
       self.following_tick += 1
       if (self.following_tick % 20):
-        #update following speed based on reaction time
+        #update following speed based on reaction time. Don't go over the 
+        #cruise setting.
         self.react_time = self.sm['plan'].prevXLead / v_ego
         if (self.react_time > (1.1 * TARGET_REACT_TIME)):
           self.v_pid = min(self.v_pid + (FOLLOW_SPEED_BUMP),v_cruise)
+        elif (self.react_time < (.9 * TARGET_REACT_TIME)):
+          self.v_pid = self.v_pid - FOLLOW_SPEED_BUMP
         self.following_tick = 0
       output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, feedforward=0.0)
 
