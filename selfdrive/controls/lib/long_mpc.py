@@ -78,10 +78,6 @@ LOG_MPC = os.environ.get('LOG_MPC', False)
 class LongitudinalMpc():
   def __init__(self, mpc_id):
     self.mpc_id = mpc_id
-    #self.mpc_solution = [0] * 10
-    #self.cur_state = [0] * 10
-
-    logData(["LOG_MPC",LOG_MPC])
 
     self.setup_mpc()
     self.v_mpc = 0.0
