@@ -268,8 +268,6 @@ class LongControl():
 
 
     # based on new state, choose our pid parameters
-    #if (self.long_control_state != last_state and self.long_control_state != LongCtrlState.off):
-    #  choosePidParams(last_state,self.long_control_state)
     if (self.long_control_state != last_state and self.long_control_state != LongCtrlState.off):
       chooseAndResetPid(self.long_control_state,self.compute_gas,self.compute_brake)
       
@@ -291,82 +289,116 @@ class LongControl():
       elif (self.long_control_state == LongCtrlState.stopped):
         self.am.add(frame,"stopped")
 
-    # 
+    # update appropriately 
+    if (self.long_control_state == LongCtrlState.off):
+      # we just became active, either while driving or sitting at a stop. 
+      self.long_control_state = LongCtrlState.steadyState
 
-    v_ego_pid = max(v_ego, MIN_CAN_SPEED)  # Without this we get jumps, CAN bus reports 0 when speed < 0.3
+    elif (self.long_control_state == LongCtrlState.stopping):
+      self.long_control_state = LongCtrlState.stopping
+      # slowing to a stop
+      
+    elif (self.long_control_state == LongCtrlState.startingNoLead):
+      self.long_control_state = LongCtrlState.startingNoLead
+      # starting from a stop behind a car
 
-    if self.long_control_state == LongCtrlState.off:
-      self.v_pid = v_ego_pid
-      self.pid.reset()
-      output_gb = 0.
+    elif (self.long_control_state == LongCtrlState.startingWithLead):
+      self.long_control_state = LongCtrlState.startingWithLead
+      # starting from a stop as first car
+
+    elif (self.long_control_state == LongCtrlState.following):
+      self.long_control_state = LongCtrlState.following
+      # trailing behind a car, either at cruise speed or below
+
+    elif (self.long_control_state == LongCtrlState.slowing):
+      self.long_control_state = LongCtrlState.slowing
+      # actively braking but not yet coming to a stop
+
+    elif (self.long_control_state == LongCtrlState.coasting):
+      self.long_control_state = LongCtrlState.coasting
+      # bleeding off speed but not braking yet
+
+    elif (self.long_control_state == LongCtrlState.stopped):
+      self.long_control_state = LongCtrlState.stopped
+      # just sitting 
+
+    elif (self.long_control_state == LongCtrlState.steadyState):
+      self.long_control_state = LongCtrlState.steadyState
+
+    #v_ego_pid = max(v_ego, MIN_CAN_SPEED)  # Without this we get jumps, CAN bus reports 0 when speed < 0.3
+
+    #if self.long_control_state == LongCtrlState.off:
+    #  self.v_pid = v_ego_pid
+    #  self.pid.reset()
+    #  output_gb = 0.
 
     # tracking objects and driving
-    elif (self.long_control_state == LongCtrlState.steadyState):
+    #elif (self.long_control_state == LongCtrlState.steadyState):
       # J.R. changed to v_cruise because we want the pid loop to do all the work
       # NOTE: v_cruise is in kph
-      self.v_pid = v_cruise*CV.KPH_TO_MS
-      self.pid.pos_limit = gas_max
+    #  self.v_pid = v_cruise*CV.KPH_TO_MS
+    #  self.pid.pos_limit = gas_max
       # set neg limit to zero to avoid braking while we are debugging
-      self.pid.neg_limit = - brake_max
-      self.pid.neg_limit = 0
+    #  self.pid.neg_limit = - brake_max
+    #  self.pid.neg_limit = 0
 
-      prevent_overshoot = False
+    #  prevent_overshoot = False
       #deadzone = interp(v_ego_pid, CP.longitudinalTuning.deadzoneBP, CP.longitudinalTuning.deadzoneV)
-      deadzone = 0
+    #  deadzone = 0
 
       # setpoint, measured, current speed, ....
       # v_pid is in m/s and so is v_ego_pid
-      output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, feedforward=0)
+      #output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, feedforward=0)
 
       # v_cruise is in kph
-      logData([v_cruise,self.v_pid,v_ego_pid,output_gb])
+      #logData([v_cruise,self.v_pid,v_ego_pid,output_gb])
 
       # output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, deadzone=deadzone, feedforward=a_target, freeze_integrator=prevent_overshoot)
      # J.R. don't do any braking, just for testing. Actually here we are in steady-state cruising,
       # so we wouldn't do any braking anyway.
-      output_gb = clip(output_gb,0,gas_max)
+      #output_gb = clip(output_gb,0,gas_max)
 
       # if prevent_overshoot:
       #  output_gb = min(output_gb, 0.0)
 
-    elif (self.long_control_state == LongCtrlState.following):
+    #elif (self.long_control_state == LongCtrlState.following):
       # our present target is whatever is established due to our following reaction time
-      self.v_pid = v_ego
+      #self.v_pid = v_ego
       # if we've fallen behind by a certain amount, bump target speed up, but not above our
       # current cruise setting
-      self.react_time = self.sm['plan'].prevXLead / v_ego
-      if (self.react_time > (1.1 * TARGET_REACT_TIME)):
-        self.v_pid = min(self.v_pid * (FOLLOW_SPEED_BUMP / RATE),v_cruise)
-        output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, feedforward=0)
-        output_gb = clip(output_gb,0,gas_max)
+      #self.react_time = self.sm['plan'].prevXLead / v_ego
+      #if (self.react_time > (1.1 * TARGET_REACT_TIME)):
+      #  self.v_pid = min(self.v_pid * (FOLLOW_SPEED_BUMP / RATE),v_cruise)
+      #  output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, feedforward=0)
+      #  output_gb = clip(output_gb,0,gas_max)
 
     # Intention is to stop, switch to a different brake control until we stop
-    elif self.long_control_state == LongCtrlState.stopping:
+    #elif self.long_control_state == LongCtrlState.stopping:
       # Keep applying brakes until the car is stopped
-      if not standstill or output_gb > -BRAKE_STOPPING_TARGET:
+      #if not standstill or output_gb > -BRAKE_STOPPING_TARGET:
         # increase braking output because we haven't hit the stop target brake level yet, or
         # we haven't stopped
-        output_gb -= STOPPING_BRAKE_RATE / RATE
+      #  output_gb -= STOPPING_BRAKE_RATE / RATE
       # clip forces output_bg to be between -brake_max and gas_max, clipping it into those range boundaries
-      output_gb = clip(output_gb, -brake_max, gas_max)
+      #output_gb = clip(output_gb, -brake_max, gas_max)
 
-      self.v_pid = v_ego
-      self.pid.reset()
+      #self.v_pid = v_ego
+      #self.pid.reset()
 
-    elif self.long_control_state == LongCtrlState.coasting:
-      output_gb = 0.0
+    #elif self.long_control_state == LongCtrlState.coasting:
+      #output_gb = 0.0
 
-    elif self.long_control_state == LongCtrlState.slowing:
+    #elif self.long_control_state == LongCtrlState.slowing:
       # here we'd update the braking pid
-      output_gb = 0.0
+     # output_gb = 0.0
 
     # Intention is to move again, release brake fast before handing control to PID
     # J.R. or startingNoLead
-    elif self.long_control_state == LongCtrlState.startingWithLead or self.long_control_state == LongCtrlState.startingNoLead:
-      if output_gb < -0.2:
-        output_gb += STARTING_BRAKE_RATE / RATE
-      self.v_pid = v_ego
-      self.pid.reset()
+    #elif self.long_control_state == LongCtrlState.startingWithLead or self.long_control_state == LongCtrlState.startingNoLead:
+    #  if output_gb < -0.2:
+    #    output_gb += STARTING_BRAKE_RATE / RATE
+    #  self.v_pid = v_ego
+    #  self.pid.reset()
 
     self.last_output_gb = output_gb
 
