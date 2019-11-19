@@ -122,17 +122,29 @@ def long_control_state_trans(sm, active, long_control_state, v_ego, v_target, v_
       long_control_state = LongCtrlState.startingWithLead
       # starting from a stop as first car
 
+    # trailing behind a car, either at cruise speed or below
     elif (long_control_state == LongCtrlState.following):
-      long_control_state = LongCtrlState.following
-      # trailing behind a car, either at cruise speed or below
+      if (react_time < (.8 * TARGET_REACT_TIME)):
+        long_control_state = LongCtrlState.coasting
+      if (react_time < (.6 * TARGET_REACT_TIME)):
+        long_control_state = LongCtrlState.slowing
 
     elif (long_control_state == LongCtrlState.slowing):
       long_control_state = LongCtrlState.slowing
+      if (long_plan.hasLead and vRel > 0 and react_time > (1.0 * TARGET_REACT_TIME)):
+        long_control_state = LongCtrlState.following
+      elif (!long_plan.hasLead):
+        long_control_state = LongCtrlState.steadyState
       # actively braking but not yet coming to a stop
 
+    # bleeding off speed but not braking yet
     elif (long_control_state == LongCtrlState.coasting):
-      long_control_state = LongCtrlState.coasting
-      # bleeding off speed but not braking yet
+      if (long_plan.hasLead and react_time < (.6 * TARGET_REACT_TIME)):
+        long_control_state = LongCtrlState.slowing
+      elif (long_plan.hasLead and vRel > 0 and react_time > (1.0 * TARGET_REACT_TIME)):
+        long_control_state = LongCtrlState.following
+      elif (not long_plan.hasLead):
+        long_control_state = LongCtrlState.steadyState
 
     elif (long_control_state == LongCtrlState.stopped):
       long_control_state = LongCtrlState.stopped
@@ -236,6 +248,8 @@ class LongControl():
     self.compute_gas = compute_gas
     self.compute_brake = compute_brake
 
+    self.following_tick = 0
+
     self.pid = PIController2((CP.longitudinalTuning.kpBP, CP.longitudinalTuning.kpV),
                             (CP.longitudinalTuning.kiBP, CP.longitudinalTuning.kiV),
                             k_f=0,
@@ -269,7 +283,13 @@ class LongControl():
 
     # based on new state, choose our pid parameters
     if (self.long_control_state != last_state and self.long_control_state != LongCtrlState.off):
-      chooseAndResetPid(self.long_control_state,self.compute_gas,self.compute_brake)
+      self.pid = chooseAndResetPid(self.long_control_state,self.compute_gas,self.compute_brake)
+      self.pid.reset()
+      if (self.long_control_state == LongCtrlState.steadyState):
+        self.v_pid = v_cruise*CV.KPH_TO_MS
+      if (self.long_control_state == LongCtrlState.following):
+        # upon entrance to following mode, set target speed to current
+        self.v_pid = v_ego
       
 
     # alert on state change
@@ -290,40 +310,47 @@ class LongControl():
         self.am.add(frame,"stopped")
 
     # update appropriately 
-    if (self.long_control_state == LongCtrlState.off):
-      # we just became active, either while driving or sitting at a stop. 
-      self.long_control_state = LongCtrlState.steadyState
-
-    elif (self.long_control_state == LongCtrlState.stopping):
+    # slowing to a stop
+    if (self.long_control_state == LongCtrlState.stopping):
       self.long_control_state = LongCtrlState.stopping
-      # slowing to a stop
       
+    # starting from a stop behind a car
     elif (self.long_control_state == LongCtrlState.startingNoLead):
       self.long_control_state = LongCtrlState.startingNoLead
-      # starting from a stop behind a car
 
+    # starting from a stop as first car
     elif (self.long_control_state == LongCtrlState.startingWithLead):
       self.long_control_state = LongCtrlState.startingWithLead
-      # starting from a stop as first car
 
+    # trailing behind a car, either at cruise speed or below
     elif (self.long_control_state == LongCtrlState.following):
-      self.long_control_state = LongCtrlState.following
-      # trailing behind a car, either at cruise speed or below
+      self.following_tick += 1
+      if (self.following_tick % 20):
+        #update following speed based on reaction time
+        self.react_time = self.sm['plan'].prevXLead / v_ego
+        if (self.react_time > (1.1 * TARGET_REACT_TIME)):
+          self.v_pid = min(self.v_pid + (FOLLOW_SPEED_BUMP),v_cruise)
+        self.following_tick = 0
+      output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, deadzone=deadzone, feedforward=a_target, freeze_integrator=prevent_overshoot)
 
+    # actively braking but not yet coming to a stop
     elif (self.long_control_state == LongCtrlState.slowing):
       self.long_control_state = LongCtrlState.slowing
-      # actively braking but not yet coming to a stop
 
+    # bleeding off speed but not braking yet
     elif (self.long_control_state == LongCtrlState.coasting):
-      self.long_control_state = LongCtrlState.coasting
-      # bleeding off speed but not braking yet
+      output_gb = 0.0
 
+    # just sitting 
     elif (self.long_control_state == LongCtrlState.stopped):
       self.long_control_state = LongCtrlState.stopped
-      # just sitting 
 
+    # cruisin' on a sunday afternoon
     elif (self.long_control_state == LongCtrlState.steadyState):
-      self.long_control_state = LongCtrlState.steadyState
+      output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, deadzone=deadzone, feedforward=a_target, freeze_integrator=prevent_overshoot)
+
+    # J.R. no braking for now
+    output_gb = clip(output_gb,0,gas_max)
 
     #v_ego_pid = max(v_ego, MIN_CAN_SPEED)  # Without this we get jumps, CAN bus reports 0 when speed < 0.3
 
