@@ -43,11 +43,11 @@ RATE = 100.0
 #  }
 def chooseAndResetPid(controlState,convert_gas,convert_brake):
   startingNoLead_Kp = 1.0
-  startingNoLead_Ki = 1.0
+  startingNoLead_Ki = 0.05
   startingNoLead_Kf = 0.0
 
   startingWithLead_Kp = 1.0
-  startingWithLead_Ki = 1.0
+  startingWithLead_Ki = 0.05
   startingWithLead_Kf = 0.0
 
   following_Kp = 1.0
@@ -309,6 +309,8 @@ class LongControl():
       elif (self.long_control_state == LongCtrlState.stopped):
         self.am.add(frame,"stopped")
 
+    v_ego_pid = max(v_ego, MIN_CAN_SPEED)  # Without this we get jumps, CAN bus reports 0 when speed < 0.3
+
     # update appropriately 
     # slowing to a stop
     if (self.long_control_state == LongCtrlState.stopping):
@@ -331,7 +333,7 @@ class LongControl():
         if (self.react_time > (1.1 * TARGET_REACT_TIME)):
           self.v_pid = min(self.v_pid + (FOLLOW_SPEED_BUMP),v_cruise)
         self.following_tick = 0
-      output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, deadzone=deadzone, feedforward=a_target, freeze_integrator=prevent_overshoot)
+      output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, feedforward=0.0)
 
     # actively braking but not yet coming to a stop
     elif (self.long_control_state == LongCtrlState.slowing):
@@ -347,12 +349,11 @@ class LongControl():
 
     # cruisin' on a sunday afternoon
     elif (self.long_control_state == LongCtrlState.steadyState):
-      output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, deadzone=deadzone, feedforward=a_target, freeze_integrator=prevent_overshoot)
+      output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, feedforward=0.0)
 
     # J.R. no braking for now
+    logData(["pre-clip",output_gb])
     output_gb = clip(output_gb,0,gas_max)
-
-    #v_ego_pid = max(v_ego, MIN_CAN_SPEED)  # Without this we get jumps, CAN bus reports 0 when speed < 0.3
 
     #if self.long_control_state == LongCtrlState.off:
     #  self.v_pid = v_ego_pid
