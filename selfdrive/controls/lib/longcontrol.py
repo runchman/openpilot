@@ -28,14 +28,59 @@ _MAX_SPEED_ERROR_V = [1.5, 1.5]  # max positive v_pid error VS actual speed; thi
 
 RATE = 100.0
 
+#  enum LongControlState {
+#    off @0;
+#    pidDEPRECATED @1;
+#    stopping @2;
+#    startingDEPRECATED @3;
+#    startingNoLead @4;
+#    startingWithLead @5;
+#    following @6;
+#    slowing @7;
+#    coasting @8;
+#    stopped @9;
+#    steadyState @10;
+#  }
+def chooseAndResetPid(controlState,convert_gas,convert_brake):
+  startingNoLead_Kp = 1.0
+  startingNoLead_Ki = 1.0
+  startingNoLead_Kf = 0.0
+
+  startingWithLead_Kp = 1.0
+  startingWithLead_Ki = 1.0
+  startingWithLead_Kf = 0.0
+
+  following_Kp = 1.0
+  following_Ki = 0.05
+  following_Kf = 0.0
+
+  slowing_Kp = 0.2
+  slowing_Ki = 0.1
+  slowing_Kf = 0.0
+
+  steadyState_Kp = 1.0
+  steadyState_Ki = 0.05
+  steadyState_Kf = 0.0
+
+  if (controlState == LongCtrlState.startingNoLead):
+    return PIController2(startingNoLead_Kp,startingNoLead_Ki,startingNoLead_Kf,convert=convert_gas, log_name="startNoLead")
+  if (controlState == LongCtrlState.startingWithLead):
+    return PIController2(startingWithLead_Kp,startingWithLead_Ki,startingWithLead_Kf,convert=convert_gas, log_name="startWithLead")
+  if (controlState == LongCtrlState.following):
+    return PIController2(following_Kp,following_Ki,following_Kf,convert=convert_gas, log_name="following")
+  if (controlState == LongCtrlState.slowing):
+    return PIController2(slowing_Kp,slowing_Ki,slowing_Kf,convert=convert_brake, log_name="slowing")
+  if (controlState == LongCtrlState.steadyState):
+    return PIController2(steadyState_Kp,steadyState_Ki,steadyState_Kf,convert=convert_gas, log_name="steadyState")
+
 
 def long_control_state_trans(sm, active, long_control_state, v_ego, v_target, v_pid,
                              output_gb, brake_pressed, cruise_standstill, v_cruise):
   """Update longitudinal control state machine"""
 
   long_plan = sm['plan']
-
   vRel = long_plan.vRel
+  deltaX = long_plan.prevXLead
 
   stopping_condition = (v_ego < 2.0 and cruise_standstill) or \
                        (v_ego < STOPPING_EGO_SPEED and \
@@ -49,7 +94,7 @@ def long_control_state_trans(sm, active, long_control_state, v_ego, v_target, v_
   # assume we are golden unless there is a target
   react_time = TARGET_REACT_TIME
   if (long_plan.hasLead and v_ego > 0.2):
-    react_time = long_plan.prevXLead / v_ego
+    react_time = deltaX / v_ego
 
   if not active:
     long_control_state = LongCtrlState.off
@@ -61,14 +106,50 @@ def long_control_state_trans(sm, active, long_control_state, v_ego, v_target, v_
     logData(["state",long_control_state])
     logData(["-----------------"])
 
-    if (long_control_state == LongCtrlState.stopped):
-      if (starting_condition and long_plan.hasLead):
-        long_control_state = LongCtrlState.startingWithLead
-        return long_control_state
+    if (long_control_state == LongCtrlState.off):
+      # we just became active, either while driving or sitting at a stop. 
+      long_control_state = LongCtrlState.steadyState
 
-      if (starting_condition and not long_plan.hasLead):
-        long_control_state = LongCtrlState.startingNoLead
-        return long_control_state
+    elif (long_control_state == LongCtrlState.stopping):
+      long_control_state = LongCtrlState.stopping
+      # slowing to a stop
+      
+    elif (long_control_state == LongCtrlState.startingNoLead):
+      long_control_state = LongCtrlState.startingNoLead
+      # starting from a stop behind a car
+
+    elif (long_control_state == LongCtrlState.startingWithLead):
+      long_control_state = LongCtrlState.startingWithLead
+      # starting from a stop as first car
+
+    elif (long_control_state == LongCtrlState.following):
+      long_control_state = LongCtrlState.following
+      # trailing behind a car, either at cruise speed or below
+
+    elif (long_control_state == LongCtrlState.slowing):
+      long_control_state = LongCtrlState.slowing
+      # actively braking but not yet coming to a stop
+
+    elif (long_control_state == LongCtrlState.coasting):
+      long_control_state = LongCtrlState.coasting
+      # bleeding off speed but not braking yet
+
+    elif (long_control_state == LongCtrlState.stopped):
+      long_control_state = LongCtrlState.stopped
+      # just sitting 
+
+    elif (long_control_state == LongCtrlState.steadyState):
+      long_control_state = LongCtrlState.steadyState
+      # cruising at set speed, no lead car
+
+    #if (long_control_state == LongCtrlState.stopped):
+    #  if (starting_condition and long_plan.hasLead):
+    #    long_control_state = LongCtrlState.startingWithLead
+    #    return long_control_state
+
+    #  if (starting_condition and not long_plan.hasLead):
+    #    long_control_state = LongCtrlState.startingNoLead
+    #    return long_control_state
 
     #if (stopping_condition and stopped_condition):
     #  long_control_state = LongCtrlState.stopped
@@ -78,24 +159,24 @@ def long_control_state_trans(sm, active, long_control_state, v_ego, v_target, v_
     #  long_control_state = LongCtrlState.stopping
     #  return long_control_state
 
-    if (long_control_state == LongCtrlState.off):
-      if (starting_condition and long_plan.hasLead):
-        long_control_state = LongCtrlState.startingWithLead
-        return long_control_state
-      if (starting_condition and not long_plan.hasLead):
-        long_control_state = LongCtrlState.startingNoLead
-        return long_control_state
+    #if (long_control_state == LongCtrlState.off):
+    #  if (starting_condition and long_plan.hasLead):
+    #    long_control_state = LongCtrlState.startingWithLead
+    #    return long_control_state
+    #  if (starting_condition and not long_plan.hasLead):
+    #    long_control_state = LongCtrlState.startingNoLead
+    #    return long_control_state
 
       # we just became active 
-      long_control_state = LongCtrlState.steadyState 
+    #  long_control_state = LongCtrlState.steadyState 
 
-    elif (long_control_state == LongCtrlState.startingWithLead):
-      if output_gb >= -BRAKE_THRESHOLD_TO_PID:
-        long_control_state = LongCtrlState.steadyState
+    #elif (long_control_state == LongCtrlState.startingWithLead):
+    #  if output_gb >= -BRAKE_THRESHOLD_TO_PID:
+    #    long_control_state = LongCtrlState.steadyState
 
-    elif (long_control_state == LongCtrlState.startingNoLead):
-      if output_gb >= -BRAKE_THRESHOLD_TO_PID:
-        long_control_state = LongCtrlState.steadyState
+    #elif (long_control_state == LongCtrlState.startingNoLead):
+    #  if output_gb >= -BRAKE_THRESHOLD_TO_PID:
+    #    long_control_state = LongCtrlState.steadyState
 
     #elif (long_control_state == LongCtrlState.following):
       # goal is to fluctuate around desired react time, setting a
@@ -105,43 +186,43 @@ def long_control_state_trans(sm, active, long_control_state, v_ego, v_target, v_
       # c. gaining too fast / getting too close -> slow
       #long_control_state = LongCtrlState.steadyState
 
-    elif (long_control_state == LongCtrlState.slowing):
+    #elif (long_control_state == LongCtrlState.slowing):
       # here we are actively needing to brake. PID loop goal is to control decel
       # in a manner that is comfortable for the driver - achieve max decel well 
       # before the stopping point, then gradually ease up as we come upon the car.
-      if (not long_plan.hasLead):
-        long_control_state = LongCtrlState.steadyState
+    #  if (not long_plan.hasLead):
+    #    long_control_state = LongCtrlState.steadyState
       # J.R. look at this value
-      if (long_plan.leadTurnoff and v_ego < 2.5):
-        long_control_state = LongCtrlState.startingNoLead
-      if (long_plan.hasLead and react_time > (1.0 * TARGET_REACT_TIME)):
-        long_control_state = LongCtrlState.following
+    #  if (long_plan.leadTurnoff and v_ego < 2.5):
+    #    long_control_state = LongCtrlState.startingNoLead
+    #  if (long_plan.hasLead and react_time > (1.0 * TARGET_REACT_TIME)):
+    #    long_control_state = LongCtrlState.following
 
-    elif (long_control_state == LongCtrlState.coasting):
-      if (long_plan.hasLead and react_time < (.6 * TARGET_REACT_TIME)):
-        long_control_state = LongCtrlState.slowing
-      elif (long_plan.hasLead and vRel > 0 and react_time > (1.0 * TARGET_REACT_TIME)):
-        long_control_state = LongCtrlState.following
-      elif (not long_plan.hasLead):
-        long_control_state = LongCtrlState.steadyState
+    #elif (long_control_state == LongCtrlState.coasting):
+    #  if (long_plan.hasLead and react_time < (.6 * TARGET_REACT_TIME)):
+    #    long_control_state = LongCtrlState.slowing
+    #  elif (long_plan.hasLead and vRel > 0 and react_time > (1.0 * TARGET_REACT_TIME)):
+    #    long_control_state = LongCtrlState.following
+    #  elif (not long_plan.hasLead):
+    #    long_control_state = LongCtrlState.steadyState
 
-    elif (long_control_state == LongCtrlState.steadyState):
+    #elif (long_control_state == LongCtrlState.steadyState):
       # technically steadyState shouldn't have a target but we'll 
       # toss this in there anyway
-      if (react_time < (.8 * TARGET_REACT_TIME)):
-        long_control_state = LongCtrlState.coasting
-      if (react_time < (.6 * TARGET_REACT_TIME)):
-        long_control_state = LongCtrlState.slowing
-      if (long_plan.gotCutoff):
-        long_control_state = LongCtrlState.following
-      elif (long_plan.leadTurnoff):
-        long_control_state = LongCtrlState.startingNoLead
+    #  if (react_time < (.8 * TARGET_REACT_TIME)):
+    #    long_control_state = LongCtrlState.coasting
+    #  if (react_time < (.6 * TARGET_REACT_TIME)):
+    #    long_control_state = LongCtrlState.slowing
+    #  if (long_plan.gotCutoff):
+    #    long_control_state = LongCtrlState.following
+    #  elif (long_plan.leadTurnoff):
+    #    long_control_state = LongCtrlState.startingNoLead
 
-    elif (long_control_state == LongCtrlState.following):
-      if (react_time < (.8 * TARGET_REACT_TIME)):
-        long_control_state = LongCtrlState.coasting
-      if (react_time < (.6 * TARGET_REACT_TIME)):
-        long_control_state = LongCtrlState.slowing
+    #elif (long_control_state == LongCtrlState.following):
+    #  if (react_time < (.8 * TARGET_REACT_TIME)):
+    #    long_control_state = LongCtrlState.coasting
+    #  if (react_time < (.6 * TARGET_REACT_TIME)):
+    #    long_control_state = LongCtrlState.slowing
 
   return long_control_state
 
@@ -152,9 +233,9 @@ class LongControl():
 
     self.sm = SM
     self.am = AM # alert manager
+    self.compute_gas = compute_gas
+    self.compute_brake = compute_brake
 
-    # J.R. first thing here, I'd config an additional PID and use one when accelerating, and a
-    # different one when decelerating.
     self.pid = PIController2((CP.longitudinalTuning.kpBP, CP.longitudinalTuning.kpV),
                             (CP.longitudinalTuning.kiBP, CP.longitudinalTuning.kiV),
                             k_f=0,
@@ -163,13 +244,6 @@ class LongControl():
                             convert=compute_gas,
                             log_name="accel")
 
-    self.decelPid = PIController2((CP.longitudinalBrakeTuning.kpBP, CP.longitudinalBrakeTuning.kpV),
-                            (CP.longitudinalBrakeTuning.kiBP, CP.longitudinalBrakeTuning.kiV),
-                            k_f=0,
-                            rate=RATE,
-                            sat_limit=0.8,
-                            convert=compute_brake,
-                            log_name="brake")
     self.v_pid = 0.0
     self.last_output_gb = 0.0
 
@@ -196,6 +270,9 @@ class LongControl():
     # based on new state, choose our pid parameters
     #if (self.long_control_state != last_state and self.long_control_state != LongCtrlState.off):
     #  choosePidParams(last_state,self.long_control_state)
+    if (self.long_control_state != last_state and self.long_control_state != LongCtrlState.off):
+      chooseAndResetPid(self.long_control_state,self.compute_gas,self.compute_brake)
+      
 
     # alert on state change
     if (self.long_control_state != last_state and self.long_control_state != LongCtrlState.off):
@@ -213,6 +290,8 @@ class LongControl():
         self.am.add(frame,"coast")
       elif (self.long_control_state == LongCtrlState.stopped):
         self.am.add(frame,"stopped")
+
+    # 
 
     v_ego_pid = max(v_ego, MIN_CAN_SPEED)  # Without this we get jumps, CAN bus reports 0 when speed < 0.3
 
