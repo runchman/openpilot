@@ -250,13 +250,14 @@ class LongControl():
 
     self.following_tick = 0
 
-    self.pid = PIController2((CP.longitudinalTuning.kpBP, CP.longitudinalTuning.kpV),
-                            (CP.longitudinalTuning.kiBP, CP.longitudinalTuning.kiV),
-                            k_f=0,
-                            rate=RATE,
-                            sat_limit=0.8,
-                            convert=compute_gas,
-                            log_name="accel")
+    #self.pid = PIController2((CP.longitudinalTuning.kpBP, CP.longitudinalTuning.kpV),
+    #                        (CP.longitudinalTuning.kiBP, CP.longitudinalTuning.kiV),
+    #                        k_f=0,
+    #                        rate=RATE,
+    #                        sat_limit=0.8,
+    #                        convert=compute_gas,
+    #                        log_name="accel")
+    self.pid = chooseAndResetPid(LongCtrlState.steadyState,compute_gas,compute_brake)
 
     self.v_pid = 0.0
     self.last_output_gb = 0.0
