@@ -73,6 +73,8 @@ def chooseAndResetPid(controlState,convert_gas,convert_brake):
   if (controlState == LongCtrlState.steadyState):
     return PIController2(steadyState_Kp,steadyState_Ki,steadyState_Kf,convert=convert_gas, log_name="steadyState")
 
+  return None
+
 
 def long_control_state_trans(sm, active, long_control_state, v_ego, v_target, v_pid,
                              output_gb, brake_pressed, cruise_standstill, v_cruise):
@@ -285,7 +287,8 @@ class LongControl():
     # based on new state, choose our pid parameters
     if (self.long_control_state != last_state and self.long_control_state != LongCtrlState.off):
       self.pid = chooseAndResetPid(self.long_control_state,self.compute_gas,self.compute_brake)
-      self.pid.reset()
+      if (self.pid is not None):
+        self.pid.reset()
       if (self.long_control_state == LongCtrlState.steadyState):
         self.v_pid = v_cruise*CV.KPH_TO_MS
       if (self.long_control_state == LongCtrlState.following):
