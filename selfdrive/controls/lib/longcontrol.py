@@ -133,7 +133,7 @@ def long_control_state_trans(sm, active, long_control_state, v_ego, v_target, v_
       long_control_state = LongCtrlState.slowing
       if (long_plan.hasLead and vRel > 0 and react_time > (1.0 * TARGET_REACT_TIME)):
         long_control_state = LongCtrlState.following
-      elif (!long_plan.hasLead):
+      elif ( not long_plan.hasLead):
         long_control_state = LongCtrlState.steadyState
       # actively braking but not yet coming to a stop
 
