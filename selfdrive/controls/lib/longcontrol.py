@@ -249,6 +249,7 @@ class LongControl():
     self.compute_brake = compute_brake
 
     self.following_tick = 0
+    self.braking_tick = 0
 
     self.pid = PIController2((CP.longitudinalTuning.kpBP, CP.longitudinalTuning.kpV),
                             (CP.longitudinalTuning.kiBP, CP.longitudinalTuning.kiV),
@@ -327,7 +328,7 @@ class LongControl():
     # trailing behind a car, either at cruise speed or below
     elif (self.long_control_state == LongCtrlState.following):
       self.following_tick += 1
-      if (self.following_tick % 20):
+      if ((self.following_tick % 20) == 0):
         #update following speed based on reaction time. Don't go over the 
         #cruise setting.
         self.react_time = self.sm['plan'].prevXLead / v_ego
@@ -336,6 +337,7 @@ class LongControl():
         elif (self.react_time < (.9 * TARGET_REACT_TIME)):
           self.v_pid = self.v_pid - FOLLOW_SPEED_BUMP
         self.following_tick = 0
+      # we update on every time thru the loop, not just when updating the speed
       output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, feedforward=0.0)
 
     # actively braking but not yet coming to a stop
