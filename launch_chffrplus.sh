@@ -28,6 +28,9 @@ function launch {
     fi
   fi
 
+  # J.R. update our branch
+  git pull
+
   # no cpu rationing for now
   echo 0-3 > /dev/cpuset/background/cpus
   echo 0-3 > /dev/cpuset/system-background/cpus
@@ -41,6 +44,10 @@ function launch {
   if [ -d /data/neoupdate ]; then
     rm -rf /data/neoupdate
   fi
+
+  # J.R. clear contents of datalog and pidlog debugging files
+  :> /data/datalog.txt
+  :> /data/pidlog.txt
 
   # Check for NEOS update
   if [ $(< /VERSION) != "12" ]; then
