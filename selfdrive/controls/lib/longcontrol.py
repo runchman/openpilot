@@ -358,10 +358,10 @@ class LongControl():
 
     # cruisin' on a sunday afternoon
     elif (self.long_control_state == LongCtrlState.steadyState):
+      self.v_pid = v_cruise*CV.KPH_TO_MS
       output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, feedforward=0.0)
 
     # J.R. no braking for now
-    logData(["pre-clip",output_gb])
     output_gb = clip(output_gb,0,gas_max)
 
     #if self.long_control_state == LongCtrlState.off:
