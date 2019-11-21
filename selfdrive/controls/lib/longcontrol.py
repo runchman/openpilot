@@ -91,7 +91,8 @@ def long_control_state_trans(sm, active, long_control_state, v_ego, v_target, v_
 
   stopped_condition = (v_ego < STOPPED_SPEED)
 
-  starting_condition = v_target > STARTING_TARGET_SPEED and not cruise_standstill
+  starting_condition_with_lead = v_target > STARTING_TARGET_SPEED and not cruise_standstill
+  starting_condition_no_lead = not cruise_standstill
 
   # assume we are golden unless there is a target
   react_time = TARGET_REACT_TIME
@@ -112,17 +113,17 @@ def long_control_state_trans(sm, active, long_control_state, v_ego, v_target, v_
       # we just became active, either while driving or sitting at a stop. 
       long_control_state = LongCtrlState.steadyState
 
+    # slowing to a stop
     elif (long_control_state == LongCtrlState.stopping):
       long_control_state = LongCtrlState.stopping
-      # slowing to a stop
       
+    # starting from a stop no lead car
     elif (long_control_state == LongCtrlState.startingNoLead):
       long_control_state = LongCtrlState.startingNoLead
-      # starting from a stop behind a car
 
+    # starting from a stop as first car
     elif (long_control_state == LongCtrlState.startingWithLead):
       long_control_state = LongCtrlState.startingWithLead
-      # starting from a stop as first car
 
     # trailing behind a car, either at cruise speed or below
     elif (long_control_state == LongCtrlState.following):
@@ -131,13 +132,13 @@ def long_control_state_trans(sm, active, long_control_state, v_ego, v_target, v_
       if (react_time < (.6 * TARGET_REACT_TIME)):
         long_control_state = LongCtrlState.slowing
 
+    # actively braking but not yet coming to a stop
     elif (long_control_state == LongCtrlState.slowing):
       long_control_state = LongCtrlState.slowing
       if (long_plan.hasLead and vRel > 0 and react_time > (1.0 * TARGET_REACT_TIME)):
         long_control_state = LongCtrlState.following
       elif ( not long_plan.hasLead):
         long_control_state = LongCtrlState.steadyState
-      # actively braking but not yet coming to a stop
 
     # bleeding off speed but not braking yet
     elif (long_control_state == LongCtrlState.coasting):
@@ -153,7 +154,16 @@ def long_control_state_trans(sm, active, long_control_state, v_ego, v_target, v_
       # just sitting 
 
     elif (long_control_state == LongCtrlState.steadyState):
-      long_control_state = LongCtrlState.steadyState
+      if (long_plan.hasLead):
+        long_control_state = LongCtrlState.following
+        if (react_time < (.8 * TARGET_REACT_TIME)):
+          long_control_state = LongCtrlState.coasting
+        if (react_time < (.6 * TARGET_REACT_TIME)):
+          long_control_state = LongCtrlState.slowing
+    #  if (long_plan.gotCutoff):
+    #    long_control_state = LongCtrlState.following
+    #  elif (long_plan.leadTurnoff):
+    #    long_control_state = LongCtrlState.startingNoLead
       # cruising at set speed, no lead car
 
     #if (long_control_state == LongCtrlState.stopped):
