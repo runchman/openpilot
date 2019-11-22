@@ -29,7 +29,7 @@ function launch {
   fi
 
   # J.R. update our branch
-  git pull
+  git pull &&
 
   # no cpu rationing for now
   echo 0-3 > /dev/cpuset/background/cpus

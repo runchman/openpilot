@@ -50,16 +50,20 @@ def chooseAndResetPid(controlState,convert_gas,convert_brake):
   startingWithLead_Ki = 0.05
   startingWithLead_Kf = 0.0
 
-  following_Kp = 1.0
-  following_Ki = 0.05
+  following_Kp = .5
+  following_Ki = 0.15
   following_Kf = 0.0
 
   slowing_Kp = 0.2
   slowing_Ki = 0.1
   slowing_Kf = 0.0
 
-  steadyState_Kp = 1.0
-  steadyState_Ki = 0.05
+  coasting_Kp = 0.0
+  coasting_Ki = 0.0
+  coasting_Kf = 0.0
+
+  steadyState_Kp = .5
+  steadyState_Ki = 0.15
   steadyState_Kf = 0.0
 
   if (controlState == LongCtrlState.startingNoLead):
@@ -72,6 +76,9 @@ def chooseAndResetPid(controlState,convert_gas,convert_brake):
     return PIController2(slowing_Kp,slowing_Ki,slowing_Kf,convert=convert_brake, log_name="slowing")
   if (controlState == LongCtrlState.steadyState):
     return PIController2(steadyState_Kp,steadyState_Ki,steadyState_Kf,convert=convert_gas, log_name="steadyState")
+  # coasting pid won't actually get called, but we need it for controlsd to not shit the bed
+  if (controlState == LongCtrlState.coasting):
+    return PIController2(coasting_Kp,coasting_Ki,coasting_Kf,convert=convert_gas, log_name="coasting")
 
   return None
 
