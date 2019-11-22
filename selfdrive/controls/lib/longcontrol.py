@@ -66,6 +66,7 @@ def chooseAndResetPid(controlState,convert_gas,convert_brake):
   steadyState_Ki = 0.15
   steadyState_Kf = 0.0
 
+  # return a controller based on state
   if (controlState == LongCtrlState.startingNoLead):
     return PIController2(startingNoLead_Kp,startingNoLead_Ki,startingNoLead_Kf,convert=convert_gas, log_name="startNoLead")
   if (controlState == LongCtrlState.startingWithLead):
