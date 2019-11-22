@@ -356,9 +356,13 @@ class LongControl():
       if ((self.following_tick % 20) == 0):
         #update following speed based on reaction time. Don't go over the 
         #cruise setting.
-        self.react_time = self.sm['plan'].prevXLead / v_ego
-        if (self.react_time > (1.0 * TARGET_REACT_TIME)):
-          self.v_pid = min((self.v_pid + FOLLOW_SPEED_BUMP),(v_cruise*CV.KPH_TO_MS))
+        # J.R. rather than a bump amount, calc new speed based on calculated
+        # lead car speed. Goal is drive vRel to zero.
+        # lead car speed = vRel + v_ego
+        #self.react_time = self.sm['plan'].prevXLead / v_ego
+        #if (self.react_time > (1.0 * TARGET_REACT_TIME)):
+        #  self.v_pid = min((self.v_pid + FOLLOW_SPEED_BUMP),(v_cruise*CV.KPH_TO_MS))
+        self.v_pid = min(v_ego_pid + self.sm['plan'].vRel,(v_cruise*CV.KPH_TO_MS))
         # we don't drop speed target; we'll coast and then brake if required
         #elif (self.react_time < (.9 * TARGET_REACT_TIME)):
         #  self.v_pid = self.v_pid - FOLLOW_SPEED_BUMP 
@@ -369,6 +373,7 @@ class LongControl():
     # actively braking but not yet coming to a stop
     elif (self.long_control_state == LongCtrlState.slowing):
       # update pid so we can log what's happening, for now no braking.
+      # J.R. we need to establish our target speed here
       output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, feedforward=0.0)
       output_gb = 0.0
 
