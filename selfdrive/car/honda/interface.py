@@ -21,9 +21,6 @@ GearShifter = car.CarState.GearShifter
 # compute gas and brake. Called from within the PID loop called by longcontrol.py. 
 # Based on speed and error, we return anywhere from 0 (negative error, i.e. we are speeding)
 # to 1.0 (max gas, configured as gasMaxBP and gasMaxV in this file).
-# Initial test, either turn off if we are speeding, or turn on proportional to the error,
-# presuming Kp is 1.0 and the max error we would encounter is 90. Error is Kp * speed_delta,
-# and for now we are using Ki and Kf of zero so error can't go above (speed delta from desired).
 # Values are in m/s
 def compute_gas_honda(error, speed):
   if (error < 0):
@@ -35,12 +32,12 @@ def compute_gas_honda(error, speed):
     return interp(error, [0, 40*CV.MPH_TO_MS],[0, 1])
 
 def compute_brake_honda(error, speed):
-  creep_brake = 0.0
-  creep_speed = 2.3
-  creep_brake_value = 0.15
-  if speed < creep_speed:
-    creep_brake = (creep_speed - speed) / creep_speed * creep_brake_value
-  return float(error) / 4.8 - creep_brake
+  if (error > 0):
+    return 0.0
+  else:
+    # the larger the error, the closer to brake max we return. 
+    # Scale it to a max error of 40; I have no idea if this makes any sense :(
+    return interp(-error, [0, 40*CV.MPH_TO_MS],[0,-1])
 
 
 def get_compute_gb_acura():
