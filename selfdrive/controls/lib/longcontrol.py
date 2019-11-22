@@ -373,7 +373,6 @@ class LongControl():
     # actively braking but not yet coming to a stop
     elif (self.long_control_state == LongCtrlState.slowing):
       # update pid so we can log what's happening, for now no braking.
-      # J.R. we need to establish our target speed here
       # set target speed to lead speed
       self.v_pid = v_ego_pid + self.sm['plan'].vRel
       output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, feedforward=0.0)
