@@ -50,8 +50,8 @@ def chooseAndResetPid(controlState,convert_gas,convert_brake):
   startingWithLead_Ki = 0.05
   startingWithLead_Kf = 0.0
 
-  following_Kp = .5
-  following_Ki = 0.15
+  following_Kp = 1.5
+  following_Ki = 0.05
   following_Kf = 0.0
 
   slowing_Kp = 0.2
@@ -62,8 +62,8 @@ def chooseAndResetPid(controlState,convert_gas,convert_brake):
   coasting_Ki = 0.0
   coasting_Kf = 0.0
 
-  steadyState_Kp = .5
-  steadyState_Ki = 0.15
+  steadyState_Kp = 1.5
+  steadyState_Ki = 0.05
   steadyState_Kf = 0.0
 
   # return a controller based on state
@@ -357,20 +357,25 @@ class LongControl():
         #update following speed based on reaction time. Don't go over the 
         #cruise setting.
         self.react_time = self.sm['plan'].prevXLead / v_ego
-        if (self.react_time > (1.1 * TARGET_REACT_TIME)):
+        if (self.react_time > (1.0 * TARGET_REACT_TIME)):
           self.v_pid = min((self.v_pid + FOLLOW_SPEED_BUMP),(v_cruise*CV.KPH_TO_MS))
-        elif (self.react_time < (.9 * TARGET_REACT_TIME)):
-          self.v_pid = self.v_pid - FOLLOW_SPEED_BUMP
+        # we don't drop speed target; we'll coast and then brake if required
+        #elif (self.react_time < (.9 * TARGET_REACT_TIME)):
+        #  self.v_pid = self.v_pid - FOLLOW_SPEED_BUMP 
         self.following_tick = 0
       # we update on every time thru the loop, not just when updating the speed
       output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, feedforward=0.0)
 
     # actively braking but not yet coming to a stop
     elif (self.long_control_state == LongCtrlState.slowing):
-      self.long_control_state = LongCtrlState.slowing
+      # update pid so we can log what's happening, for now no braking.
+      output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, feedforward=0.0)
+      output_gb = 0.0
 
     # bleeding off speed but not braking yet
     elif (self.long_control_state == LongCtrlState.coasting):
+      # update pid just so we can log that we are coasting
+      output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, feedforward=0.0)
       output_gb = 0.0
 
     # just sitting 
