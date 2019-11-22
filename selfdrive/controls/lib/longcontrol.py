@@ -29,17 +29,17 @@ _MAX_SPEED_ERROR_V = [1.5, 1.5]  # max positive v_pid error VS actual speed; thi
 RATE = 100.0
 
 #  enum LongControlState {
-#    off @0;
-#    pidDEPRECATED @1;
-#    stopping @2;
-#    startingDEPRECATED @3;
-#    startingNoLead @4;
-#    startingWithLead @5;
-#    following @6;
-#    slowing @7;
-#    coasting @8;
-#    stopped @9;
-#    steadyState @10;
+#    off @0;                  0
+#    pidDEPRECATED @1;        1
+#    stopping @2;             2
+#    startingDEPRECATED @3;   3
+#    startingNoLead @4;       4
+#    startingWithLead @5;     5
+#    following @6;            6
+#    slowing @7;              7
+#    coasting @8;             8
+#    stopped @9;              9
+#    steadyState @10;         10
 #  }
 def chooseAndResetPid(controlState,convert_gas,convert_brake):
   startingNoLead_Kp = 1.0
@@ -131,6 +131,9 @@ def long_control_state_trans(sm, active, long_control_state, v_ego, v_target, v_
         long_control_state = LongCtrlState.coasting
       if (react_time < (.6 * TARGET_REACT_TIME)):
         long_control_state = LongCtrlState.slowing
+      # no longer have a lead car, back to steadyState
+      if (not long_plan.hasLead):
+        long_control_state = LongCtrlState.steadyState
 
     # actively braking but not yet coming to a stop
     elif (long_control_state == LongCtrlState.slowing):
@@ -347,7 +350,7 @@ class LongControl():
         #cruise setting.
         self.react_time = self.sm['plan'].prevXLead / v_ego
         if (self.react_time > (1.1 * TARGET_REACT_TIME)):
-          self.v_pid = min(self.v_pid + (FOLLOW_SPEED_BUMP),v_cruise)
+          self.v_pid = min((self.v_pid + FOLLOW_SPEED_BUMP),(v_cruise*CV.KPH_TO_MS))
         elif (self.react_time < (.9 * TARGET_REACT_TIME)):
           self.v_pid = self.v_pid - FOLLOW_SPEED_BUMP
         self.following_tick = 0
