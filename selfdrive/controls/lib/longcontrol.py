@@ -3,6 +3,7 @@ from common.numpy_fast import clip, interp
 from selfdrive.controls.lib.pid import PIController2
 from selfdrive.kegman_conf import kegman_conf
 from selfdrive.debug.dataLogger import logData
+from selfdrive.debug.dataLogger import logStateChange
 from selfdrive.config import Conversions as CV
 
 kegman = kegman_conf()
@@ -145,7 +146,6 @@ def long_control_state_trans(sm, active, long_control_state, v_ego, v_target, v_
 
     # actively braking but not yet coming to a stop
     elif (long_control_state == LongCtrlState.slowing):
-      long_control_state = LongCtrlState.slowing
       if (long_plan.hasLead and vRel > 0 and react_time > (1.0 * TARGET_REACT_TIME)):
         long_control_state = LongCtrlState.following
       elif ( not long_plan.hasLead):
@@ -322,18 +322,25 @@ class LongControl():
     if (self.long_control_state != last_state and self.long_control_state != LongCtrlState.off):
       if (self.long_control_state == LongCtrlState.steadyState):
         self.am.add(frame,"smooth")
+        logStateChange("SteadyState")
       elif (self.long_control_state == LongCtrlState.startingNoLead):
         self.am.add(frame,"gunit")
+        logStateChange("startingNoLead")
       elif (self.long_control_state == LongCtrlState.startingWithLead):
         self.am.add(frame,"godude")
+        logStateChange("startingWithLead")
       elif (self.long_control_state == LongCtrlState.following):
         self.am.add(frame,"following")
+        logStateChange("following")
       elif (self.long_control_state == LongCtrlState.slowing):
         self.am.add(frame,"brakes")
+        logStateChange("slowing")
       elif (self.long_control_state == LongCtrlState.coasting):
         self.am.add(frame,"coast")
+        logStateChange("coasting")
       elif (self.long_control_state == LongCtrlState.stopped):
         self.am.add(frame,"stopped")
+        logStateChange("stopped")
 
     v_ego_pid = max(v_ego, MIN_CAN_SPEED)  # Without this we get jumps, CAN bus reports 0 when speed < 0.3
 
@@ -352,7 +359,9 @@ class LongControl():
 
     # trailing behind a car, either at cruise speed or below
     elif (self.long_control_state == LongCtrlState.following):
-      if ((self.following_tick % 20) == 0):
+      self.v_pid = min(v_ego_pid + self.sm['plan'].vRel,(v_cruise*CV.KPH_TO_MS))
+      output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, feedforward=0.0)
+      #if ((self.following_tick % 20) == 0):
         #update following speed based on reaction time. Don't go over the 
         #cruise setting.
         # J.R. rather than a bump amount, calc new speed based on calculated
@@ -361,14 +370,14 @@ class LongControl():
         #self.react_time = self.sm['plan'].prevXLead / v_ego
         #if (self.react_time > (1.0 * TARGET_REACT_TIME)):
         #  self.v_pid = min((self.v_pid + FOLLOW_SPEED_BUMP),(v_cruise*CV.KPH_TO_MS))
-        self.v_pid = min(v_ego_pid + self.sm['plan'].vRel,(v_cruise*CV.KPH_TO_MS))
+      #self.v_pid = min(v_ego_pid + self.sm['plan'].vRel,(v_cruise*CV.KPH_TO_MS))
         # we don't drop speed target; we'll coast and then brake if required
         #elif (self.react_time < (.9 * TARGET_REACT_TIME)):
         #  self.v_pid = self.v_pid - FOLLOW_SPEED_BUMP 
-        self.following_tick = 0
+      #self.following_tick = 0
       # we update on every time thru the loop, not just when updating the speed
-      output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, feedforward=0.0)
-      self.following_tick += 1
+      #output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, feedforward=0.0)
+      #self.following_tick += 1
 
     # actively braking but not yet coming to a stop
     elif (self.long_control_state == LongCtrlState.slowing):
