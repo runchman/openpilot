@@ -20,6 +20,5 @@ def logStateChange(newState):
 
 def logParameters(vRel,vEgo,xRel,tReact):
   with open('/data/pidlog.txt', 'a+') as fil:
-    fil.write("vRel: {0}\tvEgo: {1}\txRel: {2}\ttReact: {3}".\
-      format(vRel,vEgo,xRel))
+    fil.write("vRel: {0}\tvEgo: {1}\txRel: {2}\ttReact: {3}".format(vRel,vEgo,xRel,tReact))
     fil.write("\n")
