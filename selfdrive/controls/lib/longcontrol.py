@@ -315,7 +315,7 @@ class LongControl():
     vLeadCar = v_ego + vRel
     vCruiseMS = v_cruise*CV.KPH_TO_MS
     tReact = TARGET_REACT_TIME
-    if (long_plan.hasLead and v_ego > 0.2):
+    if (self.sm['plan'].hasLead and v_ego > 0.2):
       tReact = self.sm['plan'].prevXLead / v_ego
 
     # Update state machine
