@@ -364,6 +364,8 @@ class LongControl():
       # to be able to speed up
       self.v_pid = min(v_ego_pid + self.sm['plan'].vRel,(v_cruise*CV.KPH_TO_MS))
       self.react_time = self.sm['plan'].prevXLead / v_ego
+      if (self.react_time > (2*TARGET_REACT_TIME)):
+        self.v_pid = v_cruise*CV.KPH_TO_MS
       logParameters(self.sm['plan'].vRel,v_ego_pid,self.sm['plan'].prevXLead,self.react_time)
       output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, feedforward=0.0)
       # no braking
