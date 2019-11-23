@@ -4,12 +4,13 @@ from selfdrive.controls.lib.pid import PIController2
 from selfdrive.kegman_conf import kegman_conf
 from selfdrive.debug.dataLogger import logData
 from selfdrive.debug.dataLogger import logStateChange
+from selfdrive.debug.dataLogger import logParameters
 from selfdrive.config import Conversions as CV
 
 kegman = kegman_conf()
 LongCtrlState = log.ControlsState.LongControlState
 
-TARGET_REACT_TIME = 2.5   # seconds following goal
+TARGET_REACT_TIME = 1.5   # seconds following goal
 FOLLOW_SPEED_BUMP = 2 * CV.MPH_TO_MS
 
 STOPPED_SPEED = .001
@@ -359,8 +360,14 @@ class LongControl():
 
     # trailing behind a car, either at cruise speed or below
     elif (self.long_control_state == LongCtrlState.following):
+      # J.R. adjust this based on reaction time; if car is far ahead, we want
+      # to be able to speed up
       self.v_pid = min(v_ego_pid + self.sm['plan'].vRel,(v_cruise*CV.KPH_TO_MS))
+      self.react_time = self.sm['plan'].prevXLead / v_ego
+      logParameters(self.sm['plan'].vRel,v_ego_pid,self.sm['plan'].prevXLead,self.react_time)
       output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, feedforward=0.0)
+      # no braking
+      output_gb = max(output_gb,0)
       #if ((self.following_tick % 20) == 0):
         #update following speed based on reaction time. Don't go over the 
         #cruise setting.
@@ -383,12 +390,14 @@ class LongControl():
     elif (self.long_control_state == LongCtrlState.slowing):
       # set target speed to lead speed
       self.v_pid = v_ego_pid + self.sm['plan'].vRel
+      logParameters(self.sm['plan'].vRel,v_ego_pid,self.sm['plan'].prevXLead,self.react_time)
       output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, feedforward=0.0)
       #output_gb = 0.0
 
     # bleeding off speed but not braking yet
     elif (self.long_control_state == LongCtrlState.coasting):
       # update pid just so we can log that we are coasting
+      logParameters(self.sm['plan'].vRel,v_ego_pid,self.sm['plan'].prevXLead,self.react_time)
       output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, feedforward=0.0)
       output_gb = 0.0
 
@@ -399,6 +408,7 @@ class LongControl():
     # cruisin' on a sunday afternoon
     elif (self.long_control_state == LongCtrlState.steadyState):
       self.v_pid = v_cruise*CV.KPH_TO_MS
+      logParameters(self.sm['plan'].vRel,v_ego_pid,self.sm['plan'].prevXLead,self.react_time)
       output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, feedforward=0.0)
 
     # J.R. no braking for now
