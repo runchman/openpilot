@@ -52,8 +52,8 @@ def chooseAndResetPid(controlState,convert_gas,convert_brake):
   startingWithLead_Ki = 0.05
   startingWithLead_Kf = 0.0
 
-  following_Kp = 1.5
-  following_Ki = 0.10
+  following_Kp = 1.3
+  following_Ki = 0.125
   following_Kf = 0.0
 
   slowing_Kp = 0.2
@@ -64,8 +64,8 @@ def chooseAndResetPid(controlState,convert_gas,convert_brake):
   coasting_Ki = 0.0
   coasting_Kf = 0.0
 
-  steadyState_Kp = 1.5
-  steadyState_Ki = 0.10
+  steadyState_Kp = 1.3
+  steadyState_Ki = 0.125
   steadyState_Kf = 0.0
 
   # return a controller based on state
