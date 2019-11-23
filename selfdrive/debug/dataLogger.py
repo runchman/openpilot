@@ -12,8 +12,8 @@ def logPid(pid_name,kp,ki,kf,set_point,measured,p,i,f,control):
 
 def logStateChange(newState):
   with open('/data/datalog.txt', 'a+') as f:
-    f.write("State Change -> %s", newState)
+    f.write("State Change -> {0}".format(newState))
     f.write("\n")
   with open('/data/pidlog.txt', 'a+') as fil:
-    fil.write("State Change -> %s", newState)
+    f.write("State Change -> {0}".format(newState))
     fil.write("\n")
