@@ -46,8 +46,8 @@ function launch {
   fi
 
   # J.R. clear contents of datalog and pidlog debugging files
-  cp /data/datalog.txt dataloglast.txt &&
-  cp /data/pidlog.txt pidloglast.txt &&
+  cp /data/datalog.txt /data/dataloglast.txt &&
+  cp /data/pidlog.txt /data/pidloglast.txt &&
 
   :> /data/datalog.txt
   :> /data/pidlog.txt
