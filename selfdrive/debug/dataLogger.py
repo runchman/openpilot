@@ -15,5 +15,5 @@ def logStateChange(newState):
     f.write("State Change -> {0}".format(newState))
     f.write("\n")
   with open('/data/pidlog.txt', 'a+') as fil:
-    f.write("State Change -> {0}".format(newState))
+    fil.write("State Change -> {0}".format(newState))
     fil.write("\n")
