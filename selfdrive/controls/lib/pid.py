@@ -96,7 +96,6 @@ class PIController2():
     self._k_p = k_p # proportional gain
     self._k_i = k_i # integral gain
     self.k_f = k_f  # feedforward (derivative) gain
-    self.i = init_i  # used so we can transition smoothly from steady state to following and vice-versa
 
     self.log_name = log_name
 
@@ -110,6 +109,7 @@ class PIController2():
     self.convert = convert
 
     self.reset()
+    self.i = init_i  # used so we can transition smoothly from steady state to following and vice-versa
 
   @property
   def k_p(self):
