@@ -408,6 +408,7 @@ class LongControl():
     # cruisin' on a sunday afternoon
     elif (self.long_control_state == LongCtrlState.steadyState):
       self.v_pid = v_cruise*CV.KPH_TO_MS
+      self.react_time = self.sm['plan'].prevXLead / v_ego
       logParameters(self.sm['plan'].vRel,v_ego_pid,self.sm['plan'].prevXLead,self.react_time)
       output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, feedforward=0.0)
 
