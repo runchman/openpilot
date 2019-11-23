@@ -92,10 +92,11 @@ class PIController():
     return self.control
 
 class PIController2():
-  def __init__(self, k_p, k_i, k_f=1., pos_limit=None, neg_limit=None, rate=100, sat_limit=0.8, convert=None, log_name=None):
+  def __init__(self, k_p, k_i, k_f=1., pos_limit=None, neg_limit=None, rate=100, sat_limit=0.8, convert=None, init_i = 0, log_name=None):
     self._k_p = k_p # proportional gain
     self._k_i = k_i # integral gain
     self.k_f = k_f  # feedforward (derivative) gain
+    self.i = init_i  # used so we can transition smoothly from steady state to following and vice-versa
 
     self.log_name = log_name
 
@@ -161,4 +162,4 @@ class PIController2():
     self.saturated = False
 
     self.control = control  # clip(control, self.neg_limit, self.pos_limit)
-    return self.control
+    return self.control, self.i
