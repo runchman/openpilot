@@ -66,7 +66,7 @@ function launch {
 
   # start manager
   cd selfdrive
-  ./manager.py > /data/driveLog.txt
+  ./manager.py > /data/drivelog.txt
 
   # if broken, keep on screen error
   while true; do sleep 1; done

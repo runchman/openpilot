@@ -52,7 +52,7 @@ def chooseAndResetPid(controlState,convert_gas,convert_brake):
   startingWithLead_Kf = 0.0
 
   following_Kp = 1.5
-  following_Ki = 0.05
+  following_Ki = 0.10
   following_Kf = 0.0
 
   slowing_Kp = 0.2
@@ -64,7 +64,7 @@ def chooseAndResetPid(controlState,convert_gas,convert_brake):
   coasting_Kf = 0.0
 
   steadyState_Kp = 1.5
-  steadyState_Ki = 0.05
+  steadyState_Ki = 0.10
   steadyState_Kf = 0.0
 
   # return a controller based on state
@@ -146,16 +146,16 @@ def long_control_state_trans(sm, active, long_control_state, v_ego, v_target, v_
 
     # actively braking but not yet coming to a stop
     elif (long_control_state == LongCtrlState.slowing):
-      if (long_plan.hasLead and vRel > 0 and react_time > (1.0 * TARGET_REACT_TIME)):
+      if (long_plan.hasLead and vRel > 0 and react_time > (.85 * TARGET_REACT_TIME)):
         long_control_state = LongCtrlState.following
       elif ( not long_plan.hasLead):
         long_control_state = LongCtrlState.steadyState
 
     # bleeding off speed but not braking yet
     elif (long_control_state == LongCtrlState.coasting):
-      if (long_plan.hasLead and react_time < (.6 * TARGET_REACT_TIME)):
+      if (long_plan.hasLead and react_time < (.85 * TARGET_REACT_TIME)):
         long_control_state = LongCtrlState.slowing
-      elif (long_plan.hasLead and vRel > 0 and react_time > (1.0 * TARGET_REACT_TIME)):
+      elif (long_plan.hasLead and vRel > 0): # and react_time > (1.0 * TARGET_REACT_TIME)):
         long_control_state = LongCtrlState.following
       elif (not long_plan.hasLead):
         long_control_state = LongCtrlState.steadyState
@@ -167,9 +167,9 @@ def long_control_state_trans(sm, active, long_control_state, v_ego, v_target, v_
     elif (long_control_state == LongCtrlState.steadyState):
       if (long_plan.hasLead):
         long_control_state = LongCtrlState.following
-        if (react_time < (.8 * TARGET_REACT_TIME)):
+        if (react_time < (.95 * TARGET_REACT_TIME)):
           long_control_state = LongCtrlState.coasting
-        if (react_time < (.6 * TARGET_REACT_TIME)):
+        if (react_time < (.85 * TARGET_REACT_TIME)):
           long_control_state = LongCtrlState.slowing
     #  if (long_plan.gotCutoff):
     #    long_control_state = LongCtrlState.following
@@ -381,11 +381,10 @@ class LongControl():
 
     # actively braking but not yet coming to a stop
     elif (self.long_control_state == LongCtrlState.slowing):
-      # update pid so we can log what's happening, for now no braking.
       # set target speed to lead speed
       self.v_pid = v_ego_pid + self.sm['plan'].vRel
       output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, feedforward=0.0)
-      output_gb = 0.0
+      #output_gb = 0.0
 
     # bleeding off speed but not braking yet
     elif (self.long_control_state == LongCtrlState.coasting):
@@ -403,7 +402,7 @@ class LongControl():
       output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, feedforward=0.0)
 
     # J.R. no braking for now
-    output_gb = clip(output_gb,0,gas_max)
+    # output_gb = clip(output_gb,0,gas_max)
 
     #if self.long_control_state == LongCtrlState.off:
     #  self.v_pid = v_ego_pid
