@@ -156,6 +156,7 @@ class PIController2():
 
     if self.convert is not None:
       control = self.convert(control, speed=self.speed)
+      logPid("post adj",self.k_p,self.k_i,self.k_f,setpoint,measurement,self.p,i,self.f,control)
 
     self.saturated = False
 

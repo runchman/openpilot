@@ -52,7 +52,7 @@ def chooseAndResetPid(controlState,convert_gas,convert_brake):
   startingWithLead_Ki = 0.05
   startingWithLead_Kf = 0.0
 
-  following_Kp = 1.3
+  following_Kp = 1.0
   following_Ki = 0.125
   following_Kf = 0.0
 
@@ -64,7 +64,7 @@ def chooseAndResetPid(controlState,convert_gas,convert_brake):
   coasting_Ki = 0.0
   coasting_Kf = 0.0
 
-  steadyState_Kp = 1.3
+  steadyState_Kp = 1.0
   steadyState_Ki = 0.125
   steadyState_Kf = 0.0
 
@@ -137,13 +137,17 @@ def long_control_state_trans(sm, active, long_control_state, v_ego, v_target, v_
 
     # trailing behind a car, either at cruise speed or below
     elif (long_control_state == LongCtrlState.following):
-      if (react_time < (.8 * TARGET_REACT_TIME)):
+      if (react_time < (.9 * TARGET_REACT_TIME)):
         long_control_state = LongCtrlState.coasting
-      if (react_time < (.6 * TARGET_REACT_TIME)):
+      if (react_time < (.85 * TARGET_REACT_TIME)):
         long_control_state = LongCtrlState.slowing
       # no longer have a lead car, back to steadyState
       if (not long_plan.hasLead):
         long_control_state = LongCtrlState.steadyState
+      # if we are barrelling up on lead, let's coast
+      # J.R. butt-pull numbers
+      if (vRel < -20*CV.MPH_TO_MS and deltaX < 100):
+        long_control_state = LongCtrlState.coasting
 
     # actively braking but not yet coming to a stop
     elif (long_control_state == LongCtrlState.slowing):
@@ -156,7 +160,7 @@ def long_control_state_trans(sm, active, long_control_state, v_ego, v_target, v_
     elif (long_control_state == LongCtrlState.coasting):
       if (long_plan.hasLead and react_time < (.85 * TARGET_REACT_TIME)):
         long_control_state = LongCtrlState.slowing
-      elif (long_plan.hasLead and vRel > 0): # and react_time > (1.0 * TARGET_REACT_TIME)):
+      elif (long_plan.hasLead and vRel > 0 and react_time > (1.0 * TARGET_REACT_TIME)):
         long_control_state = LongCtrlState.following
       elif (not long_plan.hasLead):
         long_control_state = LongCtrlState.steadyState
@@ -364,7 +368,7 @@ class LongControl():
       # to be able to speed up
       self.v_pid = min(v_ego_pid + self.sm['plan'].vRel,(v_cruise*CV.KPH_TO_MS))
       self.react_time = self.sm['plan'].prevXLead / v_ego
-      if (self.react_time > (2*TARGET_REACT_TIME)):
+      if (self.react_time > (1.15*TARGET_REACT_TIME)):
         self.v_pid = v_cruise*CV.KPH_TO_MS
       logParameters(self.sm['plan'].vRel,v_ego_pid,self.sm['plan'].prevXLead,self.react_time)
       output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, feedforward=0.0)
@@ -390,6 +394,7 @@ class LongControl():
 
     # actively braking but not yet coming to a stop
     elif (self.long_control_state == LongCtrlState.slowing):
+      # J.R. maybe here we need to calculate a new speed target based on velocities and tReact?
       # set target speed to lead speed
       self.v_pid = v_ego_pid + self.sm['plan'].vRel
       logParameters(self.sm['plan'].vRel,v_ego_pid,self.sm['plan'].prevXLead,self.react_time)
