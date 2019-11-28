@@ -216,6 +216,23 @@ class CarInterface(object):
       #ret.lateralTuning.pid.steerPscale = [[1.0, 2.0, 10.0], [1.0, 0.5, 0.25], [1.0, 0.75, 0.5]]  # [abs angles, scale UP, scale DOWN]
       ret.steerLimitAlert = False
 
+    elif candidate == CAR.FIT:
+      stop_and_go = False
+      ret.mass = 2644. * CV.LB_TO_KG + STD_CARGO_KG
+      ret.wheelbase = 2.53
+      ret.centerToFront = ret.wheelbase * 0.39
+      ret.steerRatio = 10.25
+      tire_stiffness_factor = 0.75 # not optimized yet
+      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.20], [0.04]]
+      # BP values are speeds - 0 m/s, 10 m/s, 35 m/s
+      # which is 0 MPH, 22 MPH, and 78 MPH
+      ret.longitudinalTuning.kpBP = [0., 10., 35.]
+      # These are corresponding Kp values with the above speeds
+      ret.longitudinalTuning.kpV = [0.6, 0.4, 0.3]
+      ret.longitudinalTuning.kiBP = [0., 35.]
+      ret.longitudinalTuning.kiV = [0.18, 0.12]
+      # J.R. no Kf ???? defaults to 1.0 what the heck
+
     elif candidate == CAR.ACURA_ILX:
       stop_and_go = False
       ret.mass = 3095. * CV.LB_TO_KG + STD_CARGO_KG
